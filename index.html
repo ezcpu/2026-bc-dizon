@@ -3,142 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team KPI Dashboard 2026</title>
+    <title>BC Region Performance 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
+        :root {
+            --bg-main: #f4f1ea;
+            --sidebar-bg: #f9f7f2;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #7c7c7c;
+            --accent-purple: #e9d5ff;
+            --accent-purple-dark: #6b21a8;
+            --status-green: #10b981;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; color: #111827; }
-        .container { display: flex; min-height: 100vh; }
-        .sidebar { width: 220px; background-color: #ffffff; border-right: 1px solid #e5e7eb; padding: 24px; display: flex; flex-direction: column; }
-        .sidebar h2 { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 24px; text-transform: uppercase; }
-        .nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-        .nav button { width: 100%; padding: 12px 16px; border-radius: 8px; border: none; font-weight: 500; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s; background-color: transparent; color: #374151; }
-        .nav button.active { background-color: #e9d5ff; color: #6b21a8; }
-        .main-content { flex: 1; padding: 32px; }
-        .header { margin-bottom: 32px; position: relative; }
-        .last-updated { font-size: 12px; color: #6b7280; margin-top: 4px; font-style: italic; display: flex; align-items: center; gap: 5px; }
-        .sync-dot { height: 8px; width: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-main); color: var(--text-main); }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; padding: 40px 24px; display: flex; flex-direction: column; }
+        .logo { font-size: 24px; font-weight: 800; margin-bottom: 48px; display: flex; align-items: center; gap: 10px; }
+        .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); }
+        
+        .nav-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
+        .nav-btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; background: transparent; transition: 0.2s; margin-bottom: 8px; color: var(--text-muted); }
+        .nav-btn:hover { background: #eeebe3; }
+        .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
+
+        .main-content { flex: 1; padding: 40px 60px; overflow-y: auto; }
+        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+        .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+        .welcome-msg p { color: var(--text-muted); font-size: 14px; }
+
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
-        .metric-card { background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; }
-        .metric-card h3 { font-size: 14px; font-weight: 600; color: #6b7280; margin-bottom: 16px; }
-        .metric-value { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-        .metric-subtext { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
-        .progress-bar { height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 10px; }
-        .progress-fill { height: 100%; transition: width 0.5s; background-color: #9333ea; }
-        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
-        .chart-card { background-color: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px; height: 350px; }
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 10px; }
+        .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; position: relative; }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 24px; color: var(--text-muted); font-size: 14px; font-weight: 600; }
+        .card-value { font-size: 40px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        .card-subtext { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+
+        .progress-wrapper { margin-top: 20px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
+
+        .chart-card { min-height: 450px; width: 100%; }
+
+        .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 12px; border: 1px solid #e5e2d9; font-size: 12px; font-weight: 600; }
+        .sync-indicator { width: 8px; height: 8px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div id="loader" class="loading-overlay">
-        <div>Connecting to Live Spreadsheet...</div>
-    </div>
-
-    <div class="container">
-        <div class="sidebar">
-            <h2>Clubs</h2>
-            <div class="nav">
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="logo"><div class="logo-box"></div> BC Region</div>
+            <div class="nav-section">
+                <h2>Clubs</h2>
                 <button class="nav-btn active" data-location="Coquitlam">Coquitlam</button>
                 <button class="nav-btn" data-location="Langley">Langley</button>
                 <button class="nav-btn" data-location="North Van">North Van</button>
             </div>
-        </div>
+        </nav>
 
-        <div class="main-content">
-            <div class="header">
-                <h1 id="location-title">Club Performance 2026</h1>
-                <p>Live CSV Data Syncing vs Q1 Budget Targets</p>
-                <div id="timestamp" class="last-updated"><span class="sync-dot"></span> Waiting for sync...</div>
-            </div>
+        <main class="main-content">
+            <header class="top-header">
+                <div class="welcome-msg">
+                    <h1 id="location-title">Performance Hub</h1>
+                    <p>Tracking aggregated month-to-date performance vs targets.</p>
+                </div>
+                <div class="sync-info">
+                    <div class="status-badge"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
+                    <div id="latest-entry-label" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Latest Data Snapshot (Col E): --</div>
+                </div>
+            </header>
 
             <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>MTD Joins (Col O)</h3>
-                    <div class="metric-value" id="joins-value">0</div>
-                    <div class="metric-subtext">Jan Target: <span id="joins-target">0</span></div>
-                    <div class="progress-bar"><div class="progress-fill" id="joins-progress"></div></div>
+                <div class="card">
+                    <div class="card-header">Monthly Joins (Aggregated)</div>
+                    <div class="card-value" id="joins-value">0</div>
+                    <div class="card-subtext">Monthly Target: <span id="joins-target">0</span></div>
+                    <div class="progress-wrapper"><div class="progress-fill" id="joins-progress"></div></div>
                 </div>
 
-                <div class="metric-card">
-                    <h3>BCM % (Col AB)</h3>
-                    <div class="metric-value" id="bcm-value">0%</div>
-                    <div class="metric-subtext">Target: <span id="bcm-target">0</span>%</div>
-                    <div class="progress-bar"><div class="progress-fill" style="background-color: #3b82f6;" id="bcm-progress"></div></div>
+                <div class="card">
+                    <div class="card-header">Current BCM Avg</div>
+                    <div class="card-value" id="bcm-value">0%</div>
+                    <div class="card-subtext">Efficiency Target: <span id="bcm-target">0</span>%</div>
+                    <div class="progress-wrapper"><div class="progress-fill" id="bcm-progress" style="background-color: #3b82f6;"></div></div>
                 </div>
 
-                <div class="metric-card">
-                    <h3>MTD Members (Col L)</h3>
-                    <div class="metric-value" id="members-value">0</div>
-                    <div class="metric-subtext">Prior Year (Col M): <span id="members-py">0</span></div>
+                <div class="card">
+                    <div class="card-header">Latest MTD Members</div>
+                    <div class="card-value" id="members-value">0</div>
+                    <div class="card-subtext">
+                        <span style="color: var(--status-green);">▲ Snapshot Row</span> 
+                        <span style="opacity: 0.5;">PY (Col M): <span id="members-py">0</span></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>Monthly Joins Target Achievement</h3>
-                    <div style="height: 250px;"><canvas id="joinsChart"></canvas></div>
-                </div>
-                <div class="chart-card">
-                    <h3>BCM Performance vs Target</h3>
-                    <div style="height: 250px;"><canvas id="bcmChart"></canvas></div>
-                </div>
+            <div class="card chart-card">
+                <div class="card-header">Joins Performance vs Target (Values Static)</div>
+                <div style="height: 350px;"><canvas id="joinsChart"></canvas></div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // BASE CSV URL
-        const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
+        // Use DataLabels plugin globally
+        Chart.register(ChartDataLabels);
 
+        const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const budgetData = {
-            'Coquitlam': { joins: { jan: 667, feb: 476, mar: 454 }, bcm: 50.92 },
-            'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
-            'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02 }
+            'Coquitlam': { joins: 667, bcm: 50.92 },
+            'Langley': { joins: 543, bcm: 60.61 },
+            'North Van': { joins: 332, bcm: 49.02 }
         };
 
         let liveDataStore = {};
-        let chartInstances = { joins: null, bcm: null };
+        let chartInstances = { joins: null };
         let currentLocation = 'Coquitlam';
 
-        // SYNC FUNCTION
+        function cleanNumber(val) {
+            if (!val) return 0;
+            return parseFloat(val.toString().replace(/[%\$,\s]/g, '')) || 0;
+        }
+
         async function syncData() {
             try {
-                // Add a unique timestamp to the URL to bypass browser cache
-                const cacheBuster = `&t=${new Date().getTime()}`;
-                const response = await fetch(CSV_BASE_URL + cacheBuster);
+                const response = await fetch(`${CSV_BASE_URL}&v=${Date.now()}`);
                 const csvText = await response.text();
-                
                 Papa.parse(csvText, {
                     header: false,
                     complete: (results) => {
-                        processData(results.data);
-                        
-                        const now = new Date();
-                        document.getElementById('timestamp').innerHTML = `<span class="sync-dot"></span> Live Sync: ${now.toLocaleTimeString()}`;
-                        
-                        document.getElementById('loader').style.display = 'none';
+                        processAggregatedData(results.data);
+                        document.getElementById('sync-time').textContent = `Live: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                         updateDashboard(currentLocation);
                     }
                 });
-            } catch (error) {
-                console.error("Sync error:", error);
-                document.getElementById('timestamp').innerHTML = "<b>⚠️ Sync Failed. Retrying...</b>";
-            }
+            } catch (error) { console.error("Sync Error", error); }
         }
 
-        function processData(rows) {
+        function processAggregatedData(rows) {
             const locations = ['Coquitlam', 'Langley', 'North Van'];
             locations.forEach(loc => {
-                const row = rows.find(r => r[0] && r[0].toLowerCase().includes(loc.toLowerCase()));
-                if (row) {
+                const matches = rows.filter(r => r.some(cell => cell && cell.toString().toLowerCase().includes(loc.toLowerCase())));
+                
+                if (matches.length > 0) {
+                    // Aggregated sums for Joins and averages for BCM
+                    let sumJoins = 0, sumBCM = 0;
+                    matches.forEach(row => {
+                        sumJoins += cleanNumber(row[14]); // Col O
+                        sumBCM += cleanNumber(row[27]);   // Col AB
+                    });
+
+                    // Capture values from row with latest date in Column E
+                    const latestRow = matches.reduce((latest, current) => {
+                        const latestDate = new Date(latest[4]); // Col E
+                        const currentDate = new Date(current[4]);
+                        return currentDate > latestDate ? current : latest;
+                    });
+
                     liveDataStore[loc] = {
-                        mtdMembers: row[11], 
-                        mtdMembersPY: row[12], 
-                        joins: parseFloat(row[14]) || 0, 
-                        bcm: parseFloat(row[27]) || 0 
+                        members: cleanNumber(latestRow[11]), // Col L (Snapshot Only)
+                        py: cleanNumber(latestRow[12]),      // Col M (Snapshot Only)
+                        latestDate: new Date(latestRow[4]).toLocaleDateString(),
+                        joins: sumJoins,
+                        bcm: sumBCM / matches.length
                     };
                 }
             });
@@ -148,58 +181,66 @@
             currentLocation = location;
             const data = liveDataStore[location];
             if (!data) return;
-            
+
             const budget = budgetData[location];
-
-            document.getElementById('location-title').textContent = `${location} - Team Performance 2026`;
-            document.getElementById('joins-value').textContent = data.joins;
-            document.getElementById('joins-target').textContent = budget.joins.jan;
-            document.getElementById('joins-progress').style.width = Math.min((data.joins / budget.joins.jan) * 100, 100) + '%';
-
+            document.getElementById('location-title').textContent = `${location} Hub`;
+            document.getElementById('latest-entry-label').textContent = `Latest Data Snapshot (Col E): ${data.latestDate}`;
+            
+            document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
+            document.getElementById('joins-target').textContent = budget.joins.toLocaleString();
+            document.getElementById('joins-progress').style.width = Math.min((data.joins / budget.joins) * 100, 100) + '%';
+            
             document.getElementById('bcm-value').textContent = data.bcm.toFixed(2) + '%';
             document.getElementById('bcm-target').textContent = budget.bcm;
             document.getElementById('bcm-progress').style.width = Math.min((data.bcm / budget.bcm) * 100, 100) + '%';
-
-            document.getElementById('members-value').textContent = data.mtdMembers;
-            document.getElementById('members-py').textContent = data.mtdMembersPY;
+            
+            document.getElementById('members-value').textContent = Math.round(data.members).toLocaleString();
+            document.getElementById('members-py').textContent = Math.round(data.py).toLocaleString();
 
             renderCharts(data, budget);
         }
 
         function renderCharts(data, budget) {
             if (chartInstances.joins) chartInstances.joins.destroy();
-            if (chartInstances.bcm) chartInstances.bcm.destroy();
-
-            const ctxJoins = document.getElementById('joinsChart').getContext('2d');
-            chartInstances.joins = new Chart(ctxJoins, {
+            const ctxJ = document.getElementById('joinsChart').getContext('2d');
+            
+            chartInstances.joins = new Chart(ctxJ, {
                 type: 'bar',
-                data: {
-                    labels: ['Actual (MTD)', 'Budget (Jan)'],
-                    datasets: [{
-                        data: [data.joins, budget.joins.jan],
-                        backgroundColor: ['#9333ea', '#e5e7eb'],
-                        borderRadius: 5
+                data: { 
+                    labels: ['Actual (Aggregated)', 'Monthly Target'], 
+                    datasets: [{ 
+                        data: [data.joins, budget.joins], 
+                        backgroundColor: ['#6b21a8', '#f0ede6'], 
+                        borderRadius: 16 
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-
-            const ctxBcm = document.getElementById('bcmChart').getContext('2d');
-            chartInstances.bcm = new Chart(ctxBcm, {
-                type: 'doughnut',
-                data: {
-                    labels: ['BCM%', 'Gap'],
-                    datasets: [{
-                        data: [data.bcm, Math.max(0, budget.bcm - data.bcm)],
-                        backgroundColor: ['#3b82f6', '#f3f4f6'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false },
+                        // DataLabels configuration for static visibility
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => Math.round(value).toLocaleString(),
+                            font: { weight: 'bold', size: 14 },
+                            color: '#1a1a1a'
+                        }
+                    }, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: '#f0ede6' },
+                            // Add extra room for the labels on top
+                            suggestedMax: Math.max(data.joins, budget.joins) * 1.2
+                        }, 
+                        x: { grid: { display: false } } 
+                    } 
+                }
             });
         }
 
-        // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -208,12 +249,8 @@
             });
         });
 
-        // INITIAL LOAD
         syncData();
-
-        // AUTO-REFRESH EVERY 5 MINUTES (300,000 ms)
-        setInterval(syncData, 300000);
-
+        setInterval(syncData, 300000); // 5-minute auto-refresh
     </script>
 </body>
 </html>
