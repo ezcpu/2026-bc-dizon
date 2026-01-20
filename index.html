@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BC Region Performance 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -19,40 +19,67 @@
             --status-green: #10b981;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-main); color: var(--text-main); }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-main); color: var(--text-main); line-height: 1.5; }
 
-        .app-container { display: flex; min-height: 100vh; }
+        .app-container { display: flex; min-height: 100vh; flex-direction: row; }
 
+        /* Sidebar - Desktop */
         .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; padding: 40px 24px; display: flex; flex-direction: column; }
         .logo { font-size: 24px; font-weight: 800; margin-bottom: 48px; display: flex; align-items: center; gap: 10px; }
-        .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); }
+        .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); flex-shrink: 0; }
         
         .nav-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
         .nav-btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; background: transparent; transition: 0.2s; margin-bottom: 8px; color: var(--text-muted); }
-        .nav-btn:hover { background: #eeebe3; }
         .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
 
-        .main-content { flex: 1; padding: 40px 60px; overflow-y: auto; }
-        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+        /* Main Content Area */
+        .main-content { flex: 1; padding: 40px 60px; width: 100%; }
+        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 20px; }
         .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
         .welcome-msg p { color: var(--text-muted); font-size: 14px; }
 
+        /* Metrics Grid */
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
-        .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; position: relative; }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 24px; color: var(--text-muted); font-size: 14px; font-weight: 600; }
-        .card-value { font-size: 40px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
-        .card-subtext { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; transition: transform 0.2s; }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
+        .card-value { font-size: 36px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        .card-subtext { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
-        .progress-wrapper { margin-top: 20px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
+        .progress-wrapper { margin-top: 16px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
 
-        .chart-card { min-height: 450px; width: 100%; }
+        .chart-card { min-height: 400px; width: 100%; }
 
-        .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 12px; border: 1px solid #e5e2d9; font-size: 12px; font-weight: 600; }
-        .sync-indicator { width: 8px; height: 8px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
+        /* Status UI */
+        .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* MOBILE RESPONSIVE QUERIES */
+        @media (max-width: 1024px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; padding: 20px; border-right: none; border-bottom: 1px solid #e5e2d9; }
+            .logo { margin-bottom: 20px; justify-content: center; }
+            .nav-section { display: flex; flex-direction: row; align-items: center; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+            .nav-section h2 { display: none; }
+            .nav-btn { margin-bottom: 0; white-space: nowrap; width: auto; padding: 10px 14px; font-size: 13px; }
+            .main-content { padding: 24px 20px; }
+            .top-header { flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
+            .sync-info { align-items: center; margin-top: 10px; }
+            .metrics-grid { grid-template-columns: 1fr; gap: 16px; }
+            .card { padding: 24px; }
+            .card-value { font-size: 32px; }
+            .chart-card { min-height: 350px; }
+        }
+
+        /* Small Phone Optimization (iPhone SE / Android Mini) */
+        @media (max-width: 380px) {
+            .welcome-msg h1 { font-size: 24px; }
+            .card-value { font-size: 28px; }
+            .nav-btn { padding: 8px 10px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -71,11 +98,11 @@
             <header class="top-header">
                 <div class="welcome-msg">
                     <h1 id="location-title">Performance Hub</h1>
-                    <p>Tracking aggregated month-to-date performance vs targets.</p>
+                    <p>Live snapshots vs aggregated monthly targets.</p>
                 </div>
                 <div class="sync-info">
                     <div class="status-badge"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
-                    <div id="latest-entry-label" style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Latest Data Snapshot (Col E): --</div>
+                    <div id="latest-entry-label" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Snapshot: --</div>
                 </div>
             </header>
 
@@ -98,28 +125,27 @@
                     <div class="card-header">Latest MTD Members</div>
                     <div class="card-value" id="members-value">0</div>
                     <div class="card-subtext">
-                        <span style="color: var(--status-green);">▲ Snapshot Row</span> 
+                        <span style="color: var(--status-green);">▲ Snapshot Row (Col E)</span> 
                         <span style="opacity: 0.5;">PY (Col M): <span id="members-py">0</span></span>
                     </div>
                 </div>
             </div>
 
             <div class="card chart-card">
-                <div class="card-header">Joins Performance vs Target (Values Static)</div>
-                <div style="height: 350px;"><canvas id="joinsChart"></canvas></div>
+                <div class="card-header">Joins Performance vs Target</div>
+                <div style="height: 350px; position: relative;"><canvas id="joinsChart"></canvas></div>
             </div>
         </main>
     </div>
 
     <script>
-        // Use DataLabels plugin globally
         Chart.register(ChartDataLabels);
 
         const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const budgetData = {
-            'Coquitlam': { joins: 667, bcm: 50.92 },
-            'Langley': { joins: 543, bcm: 60.61 },
-            'North Van': { joins: 332, bcm: 49.02 }
+            'Coquitlam': { joins: 1597, bcm: 50.92 }, // Updated to your Q1 target values
+            'Langley': { joins: 1303, bcm: 60.61 },
+            'North Van': { joins: 908, bcm: 49.02 }
         };
 
         let liveDataStore = {};
@@ -152,24 +178,24 @@
                 const matches = rows.filter(r => r.some(cell => cell && cell.toString().toLowerCase().includes(loc.toLowerCase())));
                 
                 if (matches.length > 0) {
-                    // Aggregated sums for Joins and averages for BCM
+                    // Total Joins and Avg BCM
                     let sumJoins = 0, sumBCM = 0;
                     matches.forEach(row => {
                         sumJoins += cleanNumber(row[14]); // Col O
                         sumBCM += cleanNumber(row[27]);   // Col AB
                     });
 
-                    // Capture values from row with latest date in Column E
+                    // Snapshot MTD Members from Latest Date (Col E)
                     const latestRow = matches.reduce((latest, current) => {
-                        const latestDate = new Date(latest[4]); // Col E
-                        const currentDate = new Date(current[4]);
-                        return currentDate > latestDate ? current : latest;
+                        const lDate = new Date(latest[4]); 
+                        const cDate = new Date(current[4]);
+                        return cDate > lDate ? current : latest;
                     });
 
                     liveDataStore[loc] = {
-                        members: cleanNumber(latestRow[11]), // Col L (Snapshot Only)
-                        py: cleanNumber(latestRow[12]),      // Col M (Snapshot Only)
-                        latestDate: new Date(latestRow[4]).toLocaleDateString(),
+                        members: cleanNumber(latestRow[11]), 
+                        py: cleanNumber(latestRow[12]),      
+                        latestDate: latestRow[4] || "N/A",
                         joins: sumJoins,
                         bcm: sumBCM / matches.length
                     };
@@ -184,7 +210,7 @@
 
             const budget = budgetData[location];
             document.getElementById('location-title').textContent = `${location} Hub`;
-            document.getElementById('latest-entry-label').textContent = `Latest Data Snapshot (Col E): ${data.latestDate}`;
+            document.getElementById('latest-entry-label').textContent = `Latest Snapshot (Col E): ${data.latestDate}`;
             
             document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
             document.getElementById('joins-target').textContent = budget.joins.toLocaleString();
@@ -207,11 +233,11 @@
             chartInstances.joins = new Chart(ctxJ, {
                 type: 'bar',
                 data: { 
-                    labels: ['Actual (Aggregated)', 'Monthly Target'], 
+                    labels: ['Actual (Agg)', 'Monthly Target'], 
                     datasets: [{ 
                         data: [data.joins, budget.joins], 
                         backgroundColor: ['#6b21a8', '#f0ede6'], 
-                        borderRadius: 16 
+                        borderRadius: 12 
                     }]
                 },
                 options: { 
@@ -219,12 +245,11 @@
                     maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false },
-                        // DataLabels configuration for static visibility
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
-                            formatter: (value) => Math.round(value).toLocaleString(),
-                            font: { weight: 'bold', size: 14 },
+                            formatter: (val) => Math.round(val).toLocaleString(),
+                            font: { weight: 'bold', size: window.innerWidth < 600 ? 12 : 14 },
                             color: '#1a1a1a'
                         }
                     }, 
@@ -232,8 +257,7 @@
                         y: { 
                             beginAtZero: true, 
                             grid: { color: '#f0ede6' },
-                            // Add extra room for the labels on top
-                            suggestedMax: Math.max(data.joins, budget.joins) * 1.2
+                            suggestedMax: Math.max(data.joins, budget.joins) * 1.3 // Extra room for mobile labels
                         }, 
                         x: { grid: { display: false } } 
                     } 
@@ -250,7 +274,7 @@
         });
 
         syncData();
-        setInterval(syncData, 300000); // 5-minute auto-refresh
+        setInterval(syncData, 300000); // 5-min sync
     </script>
 </body>
 </html>
