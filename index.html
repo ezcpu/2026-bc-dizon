@@ -65,7 +65,7 @@
         .chart-card { min-height: 450px; width: 100%; margin-top: 24px; }
 
         .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; }
+        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; cursor: pointer; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
@@ -101,7 +101,7 @@
                     <p>Live snapshots vs monthly targets.</p>
                 </div>
                 <div class="sync-info">
-                    <div class="status-badge"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
+                    <div class="status-badge" onclick="syncData()"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
                     <div id="latest-entry-label" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Latest Entry: --</div>
                 </div>
             </header>
@@ -160,10 +160,19 @@
         let chartInstances = { joins: null };
         let currentLocation = 'Coquitlam';
 
+        function parseMobileDate(str) {
+            if (!str) return new Date(0);
+            const parts = str.split(/[-/]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return new Date(`${parts[0]}/${parts[1]}/${parts[2]}`);
+                return new Date(`${parts[2]}/${parts[0]}/${parts[1]}`);
+            }
+            return new Date(str);
+        }
+
         function getCurrentMonthKey() {
             const months = ['jan', 'feb', 'mar'];
-            const monthIdx = new Date().getMonth(); 
-            return months[monthIdx] || 'jan';
+            return months[new Date().getMonth()] || 'jan';
         }
 
         function cleanNumber(val) {
@@ -173,13 +182,9 @@
 
         async function syncData() {
             try {
-                // cache: 'no-store' and unique timestamp force mobile browsers to fetch fresh data
                 const response = await fetch(`${CSV_BASE_URL}&v=${Date.now()}`, {
                     cache: 'no-store',
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
+                    headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
                 });
                 const csvText = await response.text();
                 Papa.parse(csvText, {
@@ -190,7 +195,9 @@
                         updateDashboard(currentLocation);
                     }
                 });
-            } catch (error) { console.error("Sync Error", error); }
+            } catch (error) { 
+                console.error("Sync Error", error);
+            }
         }
 
         function processAggregatedData(rows) {
@@ -200,14 +207,14 @@
                 if (matches.length > 0) {
                     let sumJoins = 0, sumBCM = 0;
                     matches.forEach(row => {
-                        sumJoins += cleanNumber(row[14]); 
-                        sumBCM += cleanNumber(row[27]);   
+                        sumJoins += cleanNumber(row[14]); // Col O
+                        sumBCM += cleanNumber(row[27]);   // Col AB
                     });
 
                     const latestRow = matches.reduce((latest, current) => {
-                        const lDate = new Date(latest[4]); 
-                        const cDate = new Date(current[4]);
-                        return cDate > lDate ? current : latest;
+                        const lDate = parseMobileDate(latest[4]); // Col E
+                        const cDate = parseMobileDate(current[4]);
+                        return cDate >= lDate ? current : latest;
                     });
 
                     liveDataStore[loc] = {
