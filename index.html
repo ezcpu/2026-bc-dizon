@@ -17,47 +17,53 @@
             --accent-purple: #e9d5ff;
             --accent-purple-dark: #6b21a8;
             --status-green: #10b981;
+            --status-red: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-main); color: var(--text-main); line-height: 1.5; }
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            line-height: 1.5; 
+        }
 
         .app-container { display: flex; min-height: 100vh; flex-direction: row; }
 
-        /* Sidebar - Desktop */
         .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; padding: 40px 24px; display: flex; flex-direction: column; }
         .logo { font-size: 24px; font-weight: 800; margin-bottom: 48px; display: flex; align-items: center; gap: 10px; }
         .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); flex-shrink: 0; }
         
         .nav-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
         .nav-btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; background: transparent; transition: 0.2s; margin-bottom: 8px; color: var(--text-muted); }
+        .nav-btn:hover { background: #eeebe3; }
         .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
 
-        /* Main Content Area */
         .main-content { flex: 1; padding: 40px 60px; width: 100%; }
         .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 20px; }
         .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
         .welcome-msg p { color: var(--text-muted); font-size: 14px; }
 
-        /* Metrics Grid */
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
         .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; }
         .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
         .card-value { font-size: 36px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
         .card-subtext { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
 
+        .indicator { font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 6px; }
+        .indicator.positive { background-color: #d1fae5; color: var(--status-green); }
+        .indicator.negative { background-color: #fee2e2; color: var(--status-red); }
+
         .progress-wrapper { margin-top: 16px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
 
-        .chart-card { min-height: 400px; width: 100%; }
+        .chart-card { min-height: 450px; width: 100%; margin-top: 24px; }
 
-        /* Sync Logic */
         .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Responsive Mobile */
         @media (max-width: 1024px) {
             .app-container { flex-direction: column; }
             .sidebar { width: 100%; padding: 20px; border-right: none; border-bottom: 1px solid #e5e2d9; }
@@ -67,10 +73,7 @@
             .nav-btn { margin-bottom: 0; white-space: nowrap; width: auto; padding: 10px 14px; font-size: 13px; }
             .main-content { padding: 24px 20px; }
             .top-header { flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
-            .sync-info { align-items: center; margin-top: 10px; }
             .metrics-grid { grid-template-columns: 1fr; gap: 16px; }
-            .card { padding: 24px; }
-            .chart-card { min-height: 350px; }
         }
     </style>
 </head>
@@ -102,14 +105,20 @@
                 <div class="card">
                     <div class="card-header">Monthly Joins (Aggregated)</div>
                     <div class="card-value" id="joins-value">0</div>
-                    <div class="card-subtext">Current Month Target: <span id="joins-target">0</span></div>
+                    <div class="card-subtext">
+                        Target: <span id="joins-target">0</span>
+                        <span id="joins-indicator" class="indicator">--</span>
+                    </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="joins-progress"></div></div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">Current BCM Avg</div>
                     <div class="card-value" id="bcm-value">0%</div>
-                    <div class="card-subtext">Efficiency Target: <span id="bcm-target">0</span>%</div>
+                    <div class="card-subtext">
+                        Goal: <span id="bcm-target">0</span>%
+                        <span id="bcm-indicator" class="indicator">--</span>
+                    </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="bcm-progress" style="background-color: #3b82f6;"></div></div>
                 </div>
 
@@ -117,7 +126,7 @@
                     <div class="card-header">Latest MTD Members</div>
                     <div class="card-value" id="members-value">0</div>
                     <div class="card-subtext">
-                        <span style="color: var(--status-green);">▲ Snapshot Row (Col E)</span> 
+                        <span style="color: var(--status-green);">▲ Snapshot Row</span> 
                         <span style="opacity: 0.5;">PY (Col M): <span id="members-py">0</span></span>
                     </div>
                 </div>
@@ -135,7 +144,6 @@
 
         const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         
-        // Corrected targets per month
         const budgetData = {
             'Coquitlam': { joins: { jan: 667, feb: 476, mar: 454 }, bcm: 50.92 },
             'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
@@ -148,7 +156,7 @@
 
         function getCurrentMonthKey() {
             const months = ['jan', 'feb', 'mar'];
-            const monthIdx = new Date().getMonth(); // 0-indexed
+            const monthIdx = new Date().getMonth(); 
             return months[monthIdx] || 'jan';
         }
 
@@ -183,7 +191,6 @@
                         sumBCM += cleanNumber(row[27]);   // Col AB
                     });
 
-                    // Latest Row by Date in Col E
                     const latestRow = matches.reduce((latest, current) => {
                         const lDate = new Date(latest[4]); 
                         const cDate = new Date(current[4]);
@@ -201,30 +208,42 @@
             });
         }
 
+        function updateIndicator(id, diff, suffix = "") {
+            const el = document.getElementById(id);
+            const symbol = diff >= 0 ? "+" : "";
+            el.textContent = `${symbol}${diff.toFixed(diff % 1 === 0 ? 0 : 1)}${suffix}`;
+            el.className = `indicator ${diff >= 0 ? "positive" : "negative"}`;
+        }
+
         function updateDashboard(location) {
             currentLocation = location;
             const data = liveDataStore[location];
             if (!data) return;
 
-            const monthKey = getCurrentMonthKey(); // Get 'jan', 'feb', or 'mar'
+            const monthKey = getCurrentMonthKey(); 
             const budget = budgetData[location];
-            const monthlyJoinsTarget = budget.joins[monthKey]; // Correct month-specific target
+            const targetJoins = budget.joins[monthKey];
+            const targetBCM = budget.bcm;
 
             document.getElementById('location-title').textContent = `${location} Hub`;
             document.getElementById('latest-entry-label').textContent = `Latest Entry: ${data.latestDate}`;
             
+            // Joins Calculation
             document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
-            document.getElementById('joins-target').textContent = monthlyJoinsTarget.toLocaleString();
-            document.getElementById('joins-progress').style.width = Math.min((data.joins / monthlyJoinsTarget) * 100, 100) + '%';
+            document.getElementById('joins-target').textContent = targetJoins.toLocaleString();
+            document.getElementById('joins-progress').style.width = Math.min((data.joins / targetJoins) * 100, 100) + '%';
+            updateIndicator('joins-indicator', data.joins - targetJoins);
             
+            // BCM Calculation
             document.getElementById('bcm-value').textContent = data.bcm.toFixed(2) + '%';
-            document.getElementById('bcm-target').textContent = budget.bcm;
-            document.getElementById('bcm-progress').style.width = Math.min((data.bcm / budget.bcm) * 100, 100) + '%';
+            document.getElementById('bcm-target').textContent = targetBCM;
+            document.getElementById('bcm-progress').style.width = Math.min((data.bcm / targetBCM) * 100, 100) + '%';
+            updateIndicator('bcm-indicator', data.bcm - targetBCM, "%");
             
             document.getElementById('members-value').textContent = Math.round(data.members).toLocaleString();
             document.getElementById('members-py').textContent = Math.round(data.py).toLocaleString();
 
-            renderCharts(data, monthlyJoinsTarget);
+            renderCharts(data, targetJoins);
         }
 
         function renderCharts(data, targetValue) {
@@ -234,7 +253,7 @@
             chartInstances.joins = new Chart(ctxJ, {
                 type: 'bar',
                 data: { 
-                    labels: ['Actual (Agg)', 'Current Month Target'], 
+                    labels: ['Actual (Aggregated)', 'Monthly Target'], 
                     datasets: [{ 
                         data: [data.joins, targetValue], 
                         backgroundColor: ['#6b21a8', '#f0ede6'], 
@@ -250,7 +269,7 @@
                             anchor: 'end',
                             align: 'top',
                             formatter: (val) => Math.round(val).toLocaleString(),
-                            font: { weight: 'bold', size: window.innerWidth < 600 ? 12 : 14 },
+                            font: { weight: 'bold', size: window.innerWidth < 600 ? 12 : 14, family: 'Inter' },
                             color: '#1a1a1a'
                         }
                     }, 
