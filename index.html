@@ -126,9 +126,10 @@
                     <div class="card-header">Latest MTD Members</div>
                     <div class="card-value" id="members-value">0</div>
                     <div class="card-subtext">
-                        <span style="color: var(--status-green);">▲ Snapshot Row</span> 
-                        <span style="opacity: 0.5;">PY (Col M): <span id="members-py">0</span></span>
+                        Previous Year (2025): <span id="members-py">0</span>
+                        <span id="members-indicator" class="indicator">--</span>
                     </div>
+                    <div class="progress-wrapper"><div class="progress-fill" id="members-progress" style="background-color: #10b981;"></div></div>
                 </div>
             </div>
 
@@ -187,8 +188,8 @@
                 if (matches.length > 0) {
                     let sumJoins = 0, sumBCM = 0;
                     matches.forEach(row => {
-                        sumJoins += cleanNumber(row[14]); // Col O
-                        sumBCM += cleanNumber(row[27]);   // Col AB
+                        sumJoins += cleanNumber(row[14]); 
+                        sumBCM += cleanNumber(row[27]);   
                     });
 
                     const latestRow = matches.reduce((latest, current) => {
@@ -228,13 +229,11 @@
             document.getElementById('location-title').textContent = `${location} Hub`;
             document.getElementById('latest-entry-label').textContent = `Latest Entry: ${data.latestDate}`;
             
-            // Joins Calculation
             document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
             document.getElementById('joins-target').textContent = targetJoins.toLocaleString();
             document.getElementById('joins-progress').style.width = Math.min((data.joins / targetJoins) * 100, 100) + '%';
             updateIndicator('joins-indicator', data.joins - targetJoins);
             
-            // BCM Calculation
             document.getElementById('bcm-value').textContent = data.bcm.toFixed(2) + '%';
             document.getElementById('bcm-target').textContent = targetBCM;
             document.getElementById('bcm-progress').style.width = Math.min((data.bcm / targetBCM) * 100, 100) + '%';
@@ -242,6 +241,8 @@
             
             document.getElementById('members-value').textContent = Math.round(data.members).toLocaleString();
             document.getElementById('members-py').textContent = Math.round(data.py).toLocaleString();
+            document.getElementById('members-progress').style.width = Math.min((data.members / data.py) * 100, 100) + '%';
+            updateIndicator('members-indicator', data.members - data.py);
 
             renderCharts(data, targetJoins);
         }
