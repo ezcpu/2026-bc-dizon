@@ -36,19 +36,28 @@
 
         .app-container { display: flex; min-height: 100vh; flex-direction: row; }
 
+        /* Sidebar Nav */
         .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; padding: 40px 24px; display: flex; flex-direction: column; }
         .logo { font-size: 24px; font-weight: 800; margin-bottom: 48px; display: flex; align-items: center; gap: 10px; }
         .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); flex-shrink: 0; }
         
         .nav-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
         .nav-btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; background: transparent; transition: 0.2s; margin-bottom: 8px; color: var(--text-muted); }
+        .nav-btn:hover { background: #eeebe3; }
         .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
 
+        /* Main Area */
         .main-content { flex: 1; padding: 40px 60px; width: 100%; }
-        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 20px; }
+        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 20px; }
         .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
         .welcome-msg p { color: var(--text-muted); font-size: 14px; }
 
+        /* Month Tabs */
+        .month-tabs { display: flex; gap: 12px; margin-bottom: 32px; border-bottom: 1px solid #e5e2d9; padding-bottom: 12px; }
+        .month-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e2d9; background: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .month-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+
+        /* KPIs */
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
         .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; }
         .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
@@ -64,6 +73,7 @@
 
         .chart-card { min-height: 450px; width: 100%; margin-top: 24px; }
 
+        /* Sync Logic */
         .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; cursor: pointer; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
@@ -78,6 +88,7 @@
             .nav-btn { margin-bottom: 0; white-space: nowrap; width: auto; padding: 10px 14px; font-size: 13px; }
             .main-content { padding: 24px 20px; }
             .top-header { flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
+            .month-tabs { justify-content: center; }
             .metrics-grid { grid-template-columns: 1fr; gap: 16px; }
         }
     </style>
@@ -98,7 +109,7 @@
             <header class="top-header">
                 <div class="welcome-msg">
                     <h1 id="location-title">Performance Hub</h1>
-                    <p>Live snapshots vs monthly targets.</p>
+                    <p>Dynamic snapshots vs monthly targets.</p>
                 </div>
                 <div class="sync-info">
                     <div class="status-badge" onclick="syncData()"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
@@ -106,9 +117,15 @@
                 </div>
             </header>
 
+            <div class="month-tabs">
+                <button class="month-btn active" data-month="0">January</button>
+                <button class="month-btn" data-month="1">February</button>
+                <button class="month-btn" data-month="2">March</button>
+            </div>
+
             <div class="metrics-grid">
                 <div class="card">
-                    <div class="card-header">Monthly Joins (Aggregated)</div>
+                    <div class="card-header">Monthly Joins</div>
                     <div class="card-value" id="joins-value">0</div>
                     <div class="card-subtext">
                         Target: <span id="joins-target">0</span>
@@ -118,7 +135,7 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Current BCM Avg</div>
+                    <div class="card-header">Latest BCM Rate</div>
                     <div class="card-value" id="bcm-value">0%</div>
                     <div class="card-subtext">
                         Goal: <span id="bcm-target">0</span>%
@@ -156,9 +173,10 @@
             'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02 }
         };
 
-        let liveDataStore = {};
+        let rawCSVRows = [];
         let chartInstances = { joins: null };
         let currentLocation = 'Coquitlam';
+        let selectedMonthIndex = 0; // Default to January
 
         function parseMobileDate(str) {
             if (!str) return new Date(0);
@@ -168,11 +186,6 @@
                 return new Date(`${parts[2]}/${parts[0]}/${parts[1]}`);
             }
             return new Date(str);
-        }
-
-        function getCurrentMonthKey() {
-            const months = ['jan', 'feb', 'mar'];
-            return months[new Date().getMonth()] || 'jan';
         }
 
         function cleanNumber(val) {
@@ -190,42 +203,12 @@
                 Papa.parse(csvText, {
                     header: false,
                     complete: (results) => {
-                        processAggregatedData(results.data);
+                        rawCSVRows = results.data;
                         document.getElementById('sync-time').textContent = `Live: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                        updateDashboard(currentLocation);
+                        updateDashboard();
                     }
                 });
-            } catch (error) { 
-                console.error("Sync Error", error);
-            }
-        }
-
-        function processAggregatedData(rows) {
-            const locations = ['Coquitlam', 'Langley', 'North Van'];
-            locations.forEach(loc => {
-                const matches = rows.filter(r => r.some(cell => cell && cell.toString().toLowerCase().includes(loc.toLowerCase())));
-                if (matches.length > 0) {
-                    let sumJoins = 0, sumBCM = 0;
-                    matches.forEach(row => {
-                        sumJoins += cleanNumber(row[14]); // Col O
-                        sumBCM += cleanNumber(row[27]);   // Col AB
-                    });
-
-                    const latestRow = matches.reduce((latest, current) => {
-                        const lDate = parseMobileDate(latest[4]); // Col E
-                        const cDate = parseMobileDate(current[4]);
-                        return cDate >= lDate ? current : latest;
-                    });
-
-                    liveDataStore[loc] = {
-                        members: cleanNumber(latestRow[11]), 
-                        py: cleanNumber(latestRow[12]),      
-                        latestDate: latestRow[4] || "N/A",
-                        joins: sumJoins,
-                        bcm: sumBCM / matches.length
-                    };
-                }
-            });
+            } catch (error) { console.error("Sync Error", error); }
         }
 
         function updateIndicator(id, diff, suffix = "") {
@@ -235,19 +218,48 @@
             el.className = `indicator ${diff >= 0 ? "positive" : "negative"}`;
         }
 
-        function updateDashboard(location) {
-            currentLocation = location;
-            const data = liveDataStore[location];
-            if (!data) return;
+        function updateDashboard() {
+            // 1. Filter rows by Location AND Selected Month
+            const matches = rawCSVRows.filter(r => {
+                const isLoc = r.some(cell => cell && cell.toString().toLowerCase().includes(currentLocation.toLowerCase()));
+                if (!isLoc) return false;
+                const d = parseMobileDate(r[4]); // Column E Date
+                return d.getMonth() === selectedMonthIndex;
+            });
 
-            const monthKey = getCurrentMonthKey(); 
-            const budget = budgetData[location];
-            const targetJoins = budget.joins[monthKey];
+            const monthKeys = ['jan', 'feb', 'mar'];
+            const currentMonthKey = monthKeys[selectedMonthIndex];
+            const budget = budgetData[currentLocation];
+            const targetJoins = budget.joins[currentMonthKey];
             const targetBCM = budget.bcm;
 
-            document.getElementById('location-title').textContent = `${location} Hub`;
+            document.getElementById('location-title').textContent = `${currentLocation} Hub`;
+
+            if (matches.length === 0) {
+                // Handle no data for selected month
+                resetUI(targetJoins, targetBCM);
+                return;
+            }
+
+            // 2. Aggregate Data
+            let sumJoins = 0;
+            matches.forEach(row => { sumJoins += cleanNumber(row[14]); }); // Col O
+
+            const latestRow = matches.reduce((latest, current) => {
+                return parseMobileDate(current[4]) >= parseMobileDate(latest[4]) ? current : latest;
+            });
+
+            const data = {
+                members: cleanNumber(latestRow[11]), // Col L
+                py: cleanNumber(latestRow[12]),      // Col M
+                latestDate: latestRow[4],
+                joins: sumJoins,
+                bcm: cleanNumber(latestRow[27])      // Col AB Latest Snapshot
+            };
+
             document.getElementById('latest-entry-label').textContent = `Latest Entry: ${data.latestDate}`;
             
+            // UI Updates
             document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
             document.getElementById('joins-target').textContent = targetJoins.toLocaleString();
             document.getElementById('joins-progress').style.width = Math.min((data.joins / targetJoins) * 100, 100) + '%';
@@ -263,53 +275,69 @@
             document.getElementById('members-progress').style.width = Math.min((data.members / data.py) * 100, 100) + '%';
             updateIndicator('members-indicator', data.members - data.py);
 
-            renderCharts(data, targetJoins);
+            renderCharts(data.joins, targetJoins);
         }
 
-        function renderCharts(data, targetValue) {
+        function resetUI(targetJoins, targetBCM) {
+            document.getElementById('joins-value').textContent = "0";
+            document.getElementById('joins-target').textContent = targetJoins;
+            document.getElementById('joins-progress').style.width = '0%';
+            document.getElementById('joins-indicator').textContent = "--";
+            document.getElementById('bcm-value').textContent = "0.00%";
+            document.getElementById('bcm-target').textContent = targetBCM;
+            document.getElementById('bcm-progress').style.width = '0%';
+            document.getElementById('bcm-indicator').textContent = "--";
+            document.getElementById('members-value').textContent = "0";
+            document.getElementById('members-py').textContent = "0";
+            document.getElementById('members-progress').style.width = '0%';
+            document.getElementById('members-indicator').textContent = "--";
+            document.getElementById('latest-entry-label').textContent = "Latest Entry: No Data";
+            renderCharts(0, targetJoins);
+        }
+
+        function renderCharts(actual, target) {
             if (chartInstances.joins) chartInstances.joins.destroy();
-            const ctxJ = document.getElementById('joinsChart').getContext('2d');
-            
-            chartInstances.joins = new Chart(ctxJ, {
+            const ctx = document.getElementById('joinsChart').getContext('2d');
+            chartInstances.joins = new Chart(ctx, {
                 type: 'bar',
                 data: { 
-                    labels: ['Actual (Aggregated)', 'Monthly Target'], 
-                    datasets: [{ 
-                        data: [data.joins, targetValue], 
-                        backgroundColor: ['#6b21a8', '#f0ede6'], 
-                        borderRadius: 12 
-                    }]
+                    labels: ['Actual', 'Monthly Target'], 
+                    datasets: [{ data: [actual, target], backgroundColor: ['#6b21a8', '#f0ede6'], borderRadius: 12 }]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
+                    responsive: true, maintainAspectRatio: false, 
                     plugins: { 
                         legend: { display: false },
                         datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: (val) => Math.round(val).toLocaleString(),
-                            font: { weight: 'bold', size: window.innerWidth < 600 ? 12 : 14, family: 'Inter' },
-                            color: '#1a1a1a'
+                            anchor: 'end', align: 'top',
+                            formatter: (v) => Math.round(v).toLocaleString(),
+                            font: { weight: 'bold', size: 12 }, color: '#1a1a1a'
                         }
                     }, 
                     scales: { 
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { color: '#f0ede6' },
-                            suggestedMax: Math.max(data.joins, targetValue) * 1.3 
-                        }, 
+                        y: { beginAtZero: true, grid: { color: '#f0ede6' }, suggestedMax: Math.max(actual, target) * 1.3 },
                         x: { grid: { display: false } } 
                     } 
                 }
             });
         }
 
+        // Navigation Handlers
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                updateDashboard(this.dataset.location);
+                currentLocation = this.dataset.location;
+                updateDashboard();
+            });
+        });
+
+        document.querySelectorAll('.month-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedMonthIndex = parseInt(this.dataset.month);
+                updateDashboard();
             });
         });
 
