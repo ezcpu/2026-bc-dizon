@@ -184,7 +184,6 @@
         Chart.register(ChartDataLabels);
         const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         
-        // Updated targets for Feb/Mar + Fixed BCM Goals for Q1
         const budgetData = {
             'Coquitlam': { joins: { jan: 667, feb: 474, mar: 454 }, bcm: 50.92 },
             'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
@@ -194,7 +193,7 @@
         let rawCSVRows = [];
         let chartInstance = null;
         let currentLocation = 'Coquitlam';
-        let selectedMonthIndex = new Date().getMonth(); // Defaults to actual current month
+        let selectedMonthIndex = new Date().getMonth(); 
 
         function parseMobileDate(str) {
             if (!str) return new Date(0);
@@ -232,14 +231,17 @@
         }
 
         function updateDashboard() {
+            const monthKeys = ['jan', 'feb', 'mar'];
+            const currentMonthKey = monthKeys[selectedMonthIndex];
+            const budget = budgetData[currentLocation];
+            const target = budget.joins[currentMonthKey]; // This now follows the tab index correctly
+
             const matches = rawCSVRows.filter(r => {
                 const isLoc = r.some(cell => cell && cell.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 if (!isLoc) return false;
                 return parseMobileDate(r[4]).getMonth() === selectedMonthIndex;
             });
 
-            const budget = budgetData[currentLocation];
-            const target = budget.joins[['jan', 'feb', 'mar'][selectedMonthIndex]] || 0;
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
             if (matches.length === 0) { resetUI(target, budget.bcm); return; }
@@ -284,6 +286,7 @@
                 if(el) el.textContent = id.includes('bcm') ? '0.00%' : '0';
             });
             document.getElementById('latest-entry-label').textContent = "Latest Entry: No Data";
+            document.getElementById('joins-target').textContent = target; 
             document.getElementById('joins-indicator').textContent = "--";
             document.getElementById('bcm-indicator').textContent = "--";
             renderChart(0, target);
