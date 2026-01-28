@@ -59,7 +59,6 @@
         .card-value { font-size: 36px; font-weight: 800; margin-bottom: 4px; letter-spacing: -1px; }
         .card-subtext { font-size: 12px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
 
-        /* Goal Indicator Badges */
         .indicator { font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
         .indicator.positive { background-color: #d1fae5; color: var(--status-green); }
         .indicator.negative { background-color: #fee2e2; color: var(--status-red); }
@@ -69,7 +68,6 @@
 
         .chart-card { min-height: 450px; width: 100%; margin-top: 24px; padding: 32px; }
 
-        /* Top Right Logic */
         .sync-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 14px; border-radius: 12px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 700; cursor: pointer; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
@@ -145,7 +143,7 @@
                 </div>
                 <div class="card">
                     <div>
-                        <div class="card-header">Latest MTD Members</div>
+                        <div class="card-header">MTD Members</div>
                         <div class="card-value" id="members-value">0</div>
                         <div class="card-subtext">Prev. Year (2025): <span id="members-py">0</span></div>
                     </div>
@@ -185,8 +183,10 @@
     <script>
         Chart.register(ChartDataLabels);
         const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
+        
+        // Updated targets for Feb/Mar + Fixed BCM Goals for Q1
         const budgetData = {
-            'Coquitlam': { joins: { jan: 667, feb: 476, mar: 454 }, bcm: 50.92 },
+            'Coquitlam': { joins: { jan: 667, feb: 474, mar: 454 }, bcm: 50.92 },
             'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
             'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02 }
         };
@@ -194,7 +194,7 @@
         let rawCSVRows = [];
         let chartInstance = null;
         let currentLocation = 'Coquitlam';
-        let selectedMonthIndex = 0; 
+        let selectedMonthIndex = new Date().getMonth(); // Defaults to actual current month
 
         function parseMobileDate(str) {
             if (!str) return new Date(0);
@@ -257,7 +257,6 @@
 
             document.getElementById('latest-entry-label').textContent = `Latest Entry: ${latestRow[4]}`;
             
-            // Primary Metrics Updates
             document.getElementById('joins-value').textContent = Math.round(totalJoins).toLocaleString();
             document.getElementById('joins-target').textContent = target.toLocaleString();
             document.getElementById('joins-progress').style.width = Math.min((totalJoins / target) * 100, 100) + '%';
@@ -272,7 +271,6 @@
             document.getElementById('members-py').textContent = Math.round(cleanNum(latestRow[12])).toLocaleString();
             document.getElementById('members-progress').style.width = Math.min((cleanNum(latestRow[11]) / cleanNum(latestRow[12])) * 100, 100) + '%';
 
-            // Channel Performance Updates
             document.getElementById('online-bcm').textContent = (sumOnline / matches.length).toFixed(2) + '%';
             document.getElementById('club-bcm').textContent = (sumClub / matches.length).toFixed(2) + '%';
             document.getElementById('new-join-bcm').textContent = (sumNew / matches.length).toFixed(2) + '%';
