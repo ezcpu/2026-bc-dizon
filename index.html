@@ -27,16 +27,10 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            line-height: 1.5; 
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); line-height: 1.5; }
 
         .app-container { display: flex; min-height: 100vh; flex-direction: row; }
 
-        /* Sidebar Nav */
         .sidebar { width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; padding: 40px 24px; display: flex; flex-direction: column; }
         .logo { font-size: 24px; font-weight: 800; margin-bottom: 48px; display: flex; align-items: center; gap: 10px; }
         .logo-box { width: 32px; height: 32px; background: var(--text-main); border-radius: 8px; transform: rotate(45deg); flex-shrink: 0; }
@@ -46,50 +40,53 @@
         .nav-btn:hover { background: #eeebe3; }
         .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
 
-        /* Main Area */
-        .main-content { flex: 1; padding: 40px 60px; width: 100%; }
+        .main-content { flex: 1; padding: 40px 60px; width: 100%; overflow-x: hidden; }
         .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 20px; }
         .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-        .welcome-msg p { color: var(--text-muted); font-size: 14px; }
-
-        /* Month Tabs */
+        
         .month-tabs { display: flex; gap: 12px; margin-bottom: 32px; border-bottom: 1px solid #e5e2d9; padding-bottom: 12px; }
         .month-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e2d9; background: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
         .month-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
 
-        /* KPIs */
-        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
-        .card { background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; font-weight: 600; }
-        .card-value { font-size: 36px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
-        .card-subtext { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .section-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; padding-left: 4px; }
 
-        .indicator { font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 6px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px; }
+        .card { 
+            background: var(--card-bg); border-radius: 24px; padding: 32px; border: 1px solid #e5e2d9; 
+            min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; 
+        }
+        .card-header { color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-value { font-size: 36px; font-weight: 800; margin-bottom: 4px; letter-spacing: -1px; }
+        .card-subtext { font-size: 12px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+        /* Goal Indicator Badges */
+        .indicator { font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
         .indicator.positive { background-color: #d1fae5; color: var(--status-green); }
         .indicator.negative { background-color: #fee2e2; color: var(--status-red); }
 
         .progress-wrapper { margin-top: 16px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
 
-        .chart-card { min-height: 450px; width: 100%; margin-top: 24px; }
+        .chart-card { min-height: 450px; width: 100%; margin-top: 24px; padding: 32px; }
 
-        /* Sync Logic */
-        .sync-info { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 600; cursor: pointer; }
+        /* Top Right Logic */
+        .sync-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 14px; border-radius: 12px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 700; cursor: pointer; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
+        .latest-entry-label { font-size: 10px; color: var(--text-muted); font-weight: 600; padding-right: 4px; }
+        
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         @media (max-width: 1024px) {
             .app-container { flex-direction: column; }
             .sidebar { width: 100%; padding: 20px; border-right: none; border-bottom: 1px solid #e5e2d9; }
-            .logo { margin-bottom: 20px; justify-content: center; }
-            .nav-section { display: flex; flex-direction: row; align-items: center; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-            .nav-section h2 { display: none; }
-            .nav-btn { margin-bottom: 0; white-space: nowrap; width: auto; padding: 10px 14px; font-size: 13px; }
+            .nav-section { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; }
+            .nav-btn { width: auto; white-space: nowrap; margin-bottom: 0; }
             .main-content { padding: 24px 20px; }
-            .top-header { flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px; }
-            .month-tabs { justify-content: center; }
-            .metrics-grid { grid-template-columns: 1fr; gap: 16px; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .card { min-height: auto; }
+            .sync-container { align-items: center; margin-top: 10px; }
+            .top-header { flex-direction: column; align-items: center; text-align: center; }
         }
     </style>
 </head>
@@ -109,11 +106,10 @@
             <header class="top-header">
                 <div class="welcome-msg">
                     <h1 id="location-title">Performance Hub</h1>
-                    <p>Dynamic snapshots vs monthly targets.</p>
                 </div>
-                <div class="sync-info">
+                <div class="sync-container">
                     <div class="status-badge" onclick="syncData()"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
-                    <div id="latest-entry-label" style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Latest Entry: --</div>
+                    <div id="latest-entry-label" class="latest-entry-label">Latest Entry: --</div>
                 </div>
             </header>
 
@@ -123,35 +119,59 @@
                 <button class="month-btn" data-month="2">March</button>
             </div>
 
+            <div class="section-label">Primary Metrics</div>
             <div class="metrics-grid">
                 <div class="card">
-                    <div class="card-header">Monthly Joins</div>
-                    <div class="card-value" id="joins-value">0</div>
-                    <div class="card-subtext">
-                        Target: <span id="joins-target">0</span>
-                        <span id="joins-indicator" class="indicator">--</span>
+                    <div>
+                        <div class="card-header">Monthly Joins</div>
+                        <div class="card-value" id="joins-value">0</div>
+                        <div class="card-subtext">
+                            Target: <span id="joins-target">0</span>
+                            <span id="joins-indicator" class="indicator">--</span>
+                        </div>
                     </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="joins-progress"></div></div>
                 </div>
-
                 <div class="card">
-                    <div class="card-header">Latest BCM Rate</div>
-                    <div class="card-value" id="bcm-value">0%</div>
-                    <div class="card-subtext">
-                        Goal: <span id="bcm-target">0</span>%
-                        <span id="bcm-indicator" class="indicator">--</span>
+                    <div>
+                        <div class="card-header">Latest BCM Snapshot</div>
+                        <div class="card-value" id="bcm-value">0%</div>
+                        <div class="card-subtext">
+                            Goal: <span id="bcm-goal">0</span>%
+                            <span id="bcm-indicator" class="indicator">--</span>
+                        </div>
                     </div>
-                    <div class="progress-wrapper"><div class="progress-fill" id="bcm-progress" style="background-color: #3b82f6;"></div></div>
+                    <div class="progress-wrapper"><div class="progress-fill" id="bcm-progress" style="background-color: var(--accent-purple-dark);"></div></div>
                 </div>
-
                 <div class="card">
-                    <div class="card-header">Latest MTD Members</div>
-                    <div class="card-value" id="members-value">0</div>
-                    <div class="card-subtext">
-                        Previous Year (2025): <span id="members-py">0</span>
-                        <span id="members-indicator" class="indicator">--</span>
+                    <div>
+                        <div class="card-header">Latest MTD Members</div>
+                        <div class="card-value" id="members-value">0</div>
+                        <div class="card-subtext">Prev. Year (2025): <span id="members-py">0</span></div>
                     </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="members-progress" style="background-color: #10b981;"></div></div>
+                </div>
+            </div>
+
+            <div class="section-label">BCM Performance (Averages)</div>
+            <div class="metrics-grid">
+                <div class="card" style="min-height: 150px;">
+                    <div>
+                        <div class="card-header">Online Joins BCM%</div>
+                        <div class="card-value" id="online-bcm">0%</div>
+                    </div>
+                </div>
+                <div class="card" style="min-height: 150px;">
+                    <div>
+                        <div class="card-header">Club Joins BCM%</div>
+                        <div class="card-value" id="club-bcm">0%</div>
+                    </div>
+                </div>
+                <div class="card" style="min-height: 150px;">
+                    <div>
+                        <div class="card-header">New Join BCM%</div>
+                        <div class="card-value" id="new-join-bcm">0%</div>
+                    </div>
                 </div>
             </div>
 
@@ -164,9 +184,7 @@
 
     <script>
         Chart.register(ChartDataLabels);
-
         const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
-        
         const budgetData = {
             'Coquitlam': { joins: { jan: 667, feb: 476, mar: 454 }, bcm: 50.92 },
             'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
@@ -174,9 +192,9 @@
         };
 
         let rawCSVRows = [];
-        let chartInstances = { joins: null };
+        let chartInstance = null;
         let currentLocation = 'Coquitlam';
-        let selectedMonthIndex = 0; // Default to January
+        let selectedMonthIndex = 0; 
 
         function parseMobileDate(str) {
             if (!str) return new Date(0);
@@ -188,17 +206,19 @@
             return new Date(str);
         }
 
-        function cleanNumber(val) {
-            if (!val) return 0;
-            return parseFloat(val.toString().replace(/[%\$,\s]/g, '')) || 0;
+        function cleanNum(val) { return parseFloat(val.toString().replace(/[%\$,\s]/g, '')) || 0; }
+
+        function updateIndicator(id, diff, suffix = "") {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const symbol = diff >= 0 ? "+" : "";
+            el.textContent = `${symbol}${diff.toFixed(diff % 1 === 0 ? 0 : 1)}${suffix}`;
+            el.className = `indicator ${diff >= 0 ? "positive" : "negative"}`;
         }
 
         async function syncData() {
             try {
-                const response = await fetch(`${CSV_BASE_URL}&v=${Date.now()}`, {
-                    cache: 'no-store',
-                    headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-                });
+                const response = await fetch(`${CSV_BASE_URL}&v=${Date.now()}`, { cache: 'no-store' });
                 const csvText = await response.text();
                 Papa.parse(csvText, {
                     header: false,
@@ -208,138 +228,92 @@
                         updateDashboard();
                     }
                 });
-            } catch (error) { console.error("Sync Error", error); }
-        }
-
-        function updateIndicator(id, diff, suffix = "") {
-            const el = document.getElementById(id);
-            const symbol = diff >= 0 ? "+" : "";
-            el.textContent = `${symbol}${diff.toFixed(diff % 1 === 0 ? 0 : 1)}${suffix}`;
-            el.className = `indicator ${diff >= 0 ? "positive" : "negative"}`;
+            } catch (error) { console.error(error); }
         }
 
         function updateDashboard() {
-            // 1. Filter rows by Location AND Selected Month
             const matches = rawCSVRows.filter(r => {
                 const isLoc = r.some(cell => cell && cell.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 if (!isLoc) return false;
-                const d = parseMobileDate(r[4]); // Column E Date
-                return d.getMonth() === selectedMonthIndex;
+                return parseMobileDate(r[4]).getMonth() === selectedMonthIndex;
             });
 
-            const monthKeys = ['jan', 'feb', 'mar'];
-            const currentMonthKey = monthKeys[selectedMonthIndex];
             const budget = budgetData[currentLocation];
-            const targetJoins = budget.joins[currentMonthKey];
-            const targetBCM = budget.bcm;
-
+            const target = budget.joins[['jan', 'feb', 'mar'][selectedMonthIndex]] || 0;
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
-            if (matches.length === 0) {
-                // Handle no data for selected month
-                resetUI(targetJoins, targetBCM);
-                return;
-            }
+            if (matches.length === 0) { resetUI(target, budget.bcm); return; }
 
-            // 2. Aggregate Data
-            let sumJoins = 0;
-            matches.forEach(row => { sumJoins += cleanNumber(row[14]); }); // Col O
-
-            const latestRow = matches.reduce((latest, current) => {
-                return parseMobileDate(current[4]) >= parseMobileDate(latest[4]) ? current : latest;
+            let totalJoins = 0, sumOnline = 0, sumClub = 0, sumNew = 0;
+            matches.forEach(row => {
+                totalJoins += cleanNum(row[14]); 
+                sumOnline += cleanNum(row[30]);  
+                sumClub += cleanNum(row[29]);    
+                sumNew += cleanNum(row[31]);     
             });
 
-            const data = {
-                members: cleanNumber(latestRow[11]), // Col L
-                py: cleanNumber(latestRow[12]),      // Col M
-                latestDate: latestRow[4],
-                joins: sumJoins,
-                bcm: cleanNumber(latestRow[27])      // Col AB Latest Snapshot
-            };
+            const latestRow = matches.reduce((l, c) => parseMobileDate(c[4]) >= parseMobileDate(l[4]) ? c : l);
+            const bcmSnapshot = cleanNum(latestRow[27]);
 
-            document.getElementById('latest-entry-label').textContent = `Latest Entry: ${data.latestDate}`;
+            document.getElementById('latest-entry-label').textContent = `Latest Entry: ${latestRow[4]}`;
             
-            // UI Updates
-            document.getElementById('joins-value').textContent = Math.round(data.joins).toLocaleString();
-            document.getElementById('joins-target').textContent = targetJoins.toLocaleString();
-            document.getElementById('joins-progress').style.width = Math.min((data.joins / targetJoins) * 100, 100) + '%';
-            updateIndicator('joins-indicator', data.joins - targetJoins);
-            
-            document.getElementById('bcm-value').textContent = data.bcm.toFixed(2) + '%';
-            document.getElementById('bcm-target').textContent = targetBCM;
-            document.getElementById('bcm-progress').style.width = Math.min((data.bcm / targetBCM) * 100, 100) + '%';
-            updateIndicator('bcm-indicator', data.bcm - targetBCM, "%");
-            
-            document.getElementById('members-value').textContent = Math.round(data.members).toLocaleString();
-            document.getElementById('members-py').textContent = Math.round(data.py).toLocaleString();
-            document.getElementById('members-progress').style.width = Math.min((data.members / data.py) * 100, 100) + '%';
-            updateIndicator('members-indicator', data.members - data.py);
+            // Primary Metrics Updates
+            document.getElementById('joins-value').textContent = Math.round(totalJoins).toLocaleString();
+            document.getElementById('joins-target').textContent = target.toLocaleString();
+            document.getElementById('joins-progress').style.width = Math.min((totalJoins / target) * 100, 100) + '%';
+            updateIndicator('joins-indicator', totalJoins - target);
 
-            renderCharts(data.joins, targetJoins);
+            document.getElementById('bcm-value').textContent = bcmSnapshot.toFixed(2) + '%';
+            document.getElementById('bcm-goal').textContent = budget.bcm;
+            document.getElementById('bcm-progress').style.width = Math.min((bcmSnapshot / budget.bcm) * 100, 100) + '%';
+            updateIndicator('bcm-indicator', bcmSnapshot - budget.bcm, "%");
+
+            document.getElementById('members-value').textContent = Math.round(cleanNum(latestRow[11])).toLocaleString();
+            document.getElementById('members-py').textContent = Math.round(cleanNum(latestRow[12])).toLocaleString();
+            document.getElementById('members-progress').style.width = Math.min((cleanNum(latestRow[11]) / cleanNum(latestRow[12])) * 100, 100) + '%';
+
+            // Channel Performance Updates
+            document.getElementById('online-bcm').textContent = (sumOnline / matches.length).toFixed(2) + '%';
+            document.getElementById('club-bcm').textContent = (sumClub / matches.length).toFixed(2) + '%';
+            document.getElementById('new-join-bcm').textContent = (sumNew / matches.length).toFixed(2) + '%';
+
+            renderChart(totalJoins, target);
         }
 
-        function resetUI(targetJoins, targetBCM) {
-            document.getElementById('joins-value').textContent = "0";
-            document.getElementById('joins-target').textContent = targetJoins;
-            document.getElementById('joins-progress').style.width = '0%';
-            document.getElementById('joins-indicator').textContent = "--";
-            document.getElementById('bcm-value').textContent = "0.00%";
-            document.getElementById('bcm-target').textContent = targetBCM;
-            document.getElementById('bcm-progress').style.width = '0%';
-            document.getElementById('bcm-indicator').textContent = "--";
-            document.getElementById('members-value').textContent = "0";
-            document.getElementById('members-py').textContent = "0";
-            document.getElementById('members-progress').style.width = '0%';
-            document.getElementById('members-indicator').textContent = "--";
+        function resetUI(target, goal) {
+            ['joins-value', 'online-bcm', 'club-bcm', 'new-join-bcm', 'members-value', 'members-py'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.textContent = id.includes('bcm') ? '0.00%' : '0';
+            });
             document.getElementById('latest-entry-label').textContent = "Latest Entry: No Data";
-            renderCharts(0, targetJoins);
+            document.getElementById('joins-indicator').textContent = "--";
+            document.getElementById('bcm-indicator').textContent = "--";
+            renderChart(0, target);
         }
 
-        function renderCharts(actual, target) {
-            if (chartInstances.joins) chartInstances.joins.destroy();
+        function renderChart(actual, target) {
+            if (chartInstance) chartInstance.destroy();
             const ctx = document.getElementById('joinsChart').getContext('2d');
-            chartInstances.joins = new Chart(ctx, {
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
-                data: { 
-                    labels: ['Actual', 'Monthly Target'], 
-                    datasets: [{ data: [actual, target], backgroundColor: ['#6b21a8', '#f0ede6'], borderRadius: 12 }]
-                },
+                data: { labels: ['Actual', 'Goal'], datasets: [{ data: [actual, target], backgroundColor: ['#6b21a8', '#f0ede6'], borderRadius: 12 }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end', align: 'top',
-                            formatter: (v) => Math.round(v).toLocaleString(),
-                            font: { weight: 'bold', size: 12 }, color: '#1a1a1a'
-                        }
-                    }, 
-                    scales: { 
-                        y: { beginAtZero: true, grid: { color: '#f0ede6' }, suggestedMax: Math.max(actual, target) * 1.3 },
-                        x: { grid: { display: false } } 
-                    } 
+                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', formatter: (v) => Math.round(v).toLocaleString(), font: { weight: 'bold' } } },
+                    scales: { y: { beginAtZero: true, suggestedMax: Math.max(actual, target) * 1.3 }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        // Navigation Handlers
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentLocation = this.dataset.location;
-                updateDashboard();
-            });
-        });
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', function() {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active'); currentLocation = this.dataset.location; updateDashboard();
+        }));
 
-        document.querySelectorAll('.month-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                selectedMonthIndex = parseInt(this.dataset.month);
-                updateDashboard();
-            });
-        });
+        document.querySelectorAll('.month-btn').forEach(btn => btn.addEventListener('click', function() {
+            document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active'); selectedMonthIndex = parseInt(this.dataset.month); updateDashboard();
+        }));
 
         syncData();
         setInterval(syncData, 300000);
