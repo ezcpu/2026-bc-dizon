@@ -11,11 +11,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BC Performance">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3309/3309986.png">
-    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"BC Region Performance","short_name":"BC Stats","start_url":".","display":"standalone","background_color":"#f4f1ea","theme_color":"#6b21a8","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3309/3309986.png","sizes":"512x512","type":"image/png"}]}'>
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2920/2920323.png">
+    
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"BC Region Performance","short_name":"BC Stats","start_url":".","display":"standalone","background_color":"#f4f1ea","theme_color":"#6b21a8","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2920/2920323.png","sizes":"512x512","type":"image/png"}]}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         :root {
@@ -124,7 +128,7 @@
             
             <div class="install-container">
                 <button class="install-btn" id="installBtn" onclick="triggerInstall()">
-                    <span class="install-icon">📲</span> Add to Home Screen
+                    <span class="install-icon">📲</span> Install App
                 </button>
             </div>
         </nav>
@@ -197,11 +201,13 @@
         <p style="color:#666; font-size:14px; margin-top:8px;">To add this app to your home screen:</p>
         <div style="margin-top:16px; font-weight:600; font-size:14px;">
             1. Tap the Share button <img src="https://cdn-icons-png.flaticon.com/512/1828/1828952.png" class="ios-icon"> below.<br><br>
-            2. Scroll down and select "Add to Home Screen" <img src="https://cdn-icons-png.flaticon.com/512/3309/3309986.png" class="ios-icon">.
+            2. Scroll down and select "Add to Home Screen" <img src="https://cdn-icons-png.flaticon.com/512/1828/1828791.png" class="ios-icon">.
         </div>
     </div>
 
     <script>
+        Chart.register(ChartDataLabels);
+        
         const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
 
