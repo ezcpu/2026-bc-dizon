@@ -18,8 +18,6 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         :root {
@@ -44,7 +42,6 @@
             display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px;
         }
         
-        /* Updated Logo to use the Image */
         .logo-box { 
             width: 40px; height: 40px; 
             background: url('https://cdn-icons-png.flaticon.com/512/8072/8072575.png') no-repeat center center;
@@ -118,7 +115,7 @@
             .app-container { flex-direction: column; }
             .sidebar { 
                 width: 100%; 
-                padding: 60px 20px 20px 20px; /* Safe area for Dynamic Island */
+                padding: 60px 20px 20px 20px; 
                 border-right: none; 
                 border-bottom: 1px solid #e5e2d9; 
             }
@@ -149,7 +146,7 @@
             
             <div class="install-container">
                 <button class="install-btn" id="installBtn" onclick="triggerInstall()">
-                    <span class="install-icon">📲</span> Install App
+                    <span class="install-icon">📲</span> Add to Home Screen
                 </button>
             </div>
         </nav>
@@ -193,9 +190,22 @@
                     <div>
                         <div class="card-header">MTD Members</div>
                         <div class="card-value" id="members-value">0</div>
-                        <div class="card-subtext">Prev. Year (2025): <span id="members-py">0</span></div>
+                        <div class="card-subtext">
+                            PY: <span id="members-py">0</span>
+                            <span id="members-yoy" style="margin-left: 6px;" class="indicator">--</span>
+                        </div>
                     </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="members-progress" style="background-color: #10b981;"></div></div>
+                </div>
+                
+                <div class="card" style="min-height: 150px;">
+                    <div><div class="card-header">Total Upgrades</div><div class="card-value" id="upgrades-value">0</div></div>
+                </div>
+                <div class="card" style="min-height: 150px;">
+                    <div><div class="card-header">Total Downgrades</div><div class="card-value" id="downgrades-value">0</div></div>
+                </div>
+                <div class="card" style="min-height: 150px;">
+                    <div><div class="card-header">Labor KPI</div><div class="card-value" id="labor-value">$0.00</div></div>
                 </div>
             </div>
 
@@ -213,11 +223,6 @@
                     <div id="retail-breakdown" class="retail-list"></div>
                 </div>
             </div>
-
-            <div class="card chart-card">
-                <div class="card-header">Joins Performance vs Monthly Target</div>
-                <div style="height: 350px; position: relative;"><canvas id="joinsChart"></canvas></div>
-            </div>
         </main>
     </div>
 
@@ -232,18 +237,32 @@
     </div>
 
     <script>
-        Chart.register(ChartDataLabels);
-        
         const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
 
+
         const budgetData = {
-            'Coquitlam': { joins: { jan: 667, feb: 474, mar: 454 }, bcm: 50.92, formal: 'PLANET FITNESS COQUITLAM BC' },
-            'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61, formal: 'PLANET FITNESS LANGLEY BC' },
-            'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02, formal: 'PLANET FITNESS NORTH VANCOUVER BC' }
+            'Coquitlam': { 
+                joins: { jan: 667, feb: 474, mar: 454 }, 
+                bcm: 50.92, 
+                labor: { jan: "95.78%", feb: "00.00%", mar: "00.00%"}, 
+                formal: 'PLANET FITNESS COQUITLAM BC' 
+            },
+            'Langley': { 
+                joins: { jan: 543, feb: 374, mar: 386 }, 
+                bcm: 60.61, 
+                labor: { jan: "96.29%", feb: "00.00%", mar: "00.00%" }, 
+                formal: 'PLANET FITNESS LANGLEY BC' 
+            },
+            'North Van': { 
+                joins: { jan: 332, feb: 291, mar: 285 }, 
+                bcm: 49.02, 
+                labor: { jan: "99.47%", feb: "00.00%", mar: "00.00%" }, 
+                formal: 'PLANET FITNESS NORTH VANCOUVER BC' 
+            }
         };
 
-        let rawP = [], rawR = [], chartInstance = null, currentLocation = 'Coquitlam', selectedMonthIndex = new Date().getMonth(); 
+        let rawP = [], rawR = [], currentLocation = 'Coquitlam', selectedMonthIndex = new Date().getMonth(); 
         let deferredPrompt; 
 
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -264,7 +283,6 @@
             }
         }
 
-        // STRICT Date Parser
         function getMonthFromAnyDate(str) {
             if (!str) return -1;
             const parts = str.trim().split(/[-/]/);
@@ -308,7 +326,12 @@
             );
 
             if (pMatches.length > 0) {
-                let j = 0; pMatches.forEach(r => { j += cleanNum(r[14]); });
+                let j = 0, upg = 0, dwn = 0;
+                pMatches.forEach(r => { 
+                    j += cleanNum(r[14]); 
+                    upg += cleanNum(r[25]); 
+                    dwn += cleanNum(r[26]); 
+                });
                 const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
                 
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
@@ -323,11 +346,22 @@
                 document.getElementById('bcm-progress').style.width = Math.min((curBCM/budget.bcm)*100, 100)+'%';
                 updateIndicator('bcm-indicator', curBCM - budget.bcm, "%");
 
-                document.getElementById('members-value').textContent = Math.round(cleanNum(lat[11])).toLocaleString();
-                document.getElementById('members-py').textContent = Math.round(cleanNum(lat[12])).toLocaleString();
-                document.getElementById('members-progress').style.width = Math.min((cleanNum(lat[11])/cleanNum(lat[12]))*100, 100)+'%';
+                const mtd = cleanNum(lat[11]);
+                const py = cleanNum(lat[12]);
+                document.getElementById('members-value').textContent = Math.round(mtd).toLocaleString();
+                document.getElementById('members-py').textContent = Math.round(py).toLocaleString();
+                document.getElementById('members-progress').style.width = Math.min((mtd/py)*100, 100)+'%';
+                
+                
+                updateIndicator('members-yoy', mtd - py);
 
-                renderChart(j, target);
+                document.getElementById('upgrades-value').textContent = Math.round(upg).toLocaleString();
+                document.getElementById('downgrades-value').textContent = Math.round(dwn).toLocaleString();
+                
+                const monthKey = ['jan', 'feb', 'mar'][selectedMonthIndex];
+                const currentLabor = budget.labor[monthKey];
+                document.getElementById('labor-value').textContent = 
+                    typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : currentLabor;
             }
 
             const rMatches = rawR.filter(r => 
@@ -356,16 +390,6 @@
                 document.getElementById('retail-total').textContent = '$0.00';
                 breakdown.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">No matching retail rows found.</div>';
             }
-        }
-
-        function renderChart(actual, target) {
-            if (chartInstance) chartInstance.destroy();
-            const ctx = document.getElementById('joinsChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['Actual', 'Goal'], datasets: [{ data: [actual, target], backgroundColor: ['#6b21a8', '#f0ede6'], borderRadius: 12 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top' } } }
-            });
         }
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', function() {
