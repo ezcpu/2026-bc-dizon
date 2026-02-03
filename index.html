@@ -66,6 +66,11 @@
         .progress-wrapper { margin-top: 16px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
 
+        .retail-list { margin-top: 10px; }
+        .retail-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0ede6; font-size: 13px; font-weight: 600; }
+        .retail-item:last-child { border-bottom: none; }
+        .retail-label { color: var(--text-muted); font-weight: 500; }
+
         .chart-card { min-height: 450px; width: 100%; margin-top: 24px; padding: 32px; }
 
         .sync-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -112,7 +117,7 @@
             </header>
 
             <div class="month-tabs">
-                <button class="month-btn active" data-month="0">January</button>
+                <button class="month-btn" data-month="0">January</button>
                 <button class="month-btn" data-month="1">February</button>
                 <button class="month-btn" data-month="2">March</button>
             </div>
@@ -123,10 +128,7 @@
                     <div>
                         <div class="card-header">Monthly Joins</div>
                         <div class="card-value" id="joins-value">0</div>
-                        <div class="card-subtext">
-                            Target: <span id="joins-target">0</span>
-                            <span id="joins-indicator" class="indicator">--</span>
-                        </div>
+                        <div class="card-subtext">Target: <span id="joins-target">0</span> <span id="joins-indicator" class="indicator">--</span></div>
                     </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="joins-progress"></div></div>
                 </div>
@@ -134,10 +136,7 @@
                     <div>
                         <div class="card-header">Latest BCM Snapshot</div>
                         <div class="card-value" id="bcm-value">0%</div>
-                        <div class="card-subtext">
-                            Goal: <span id="bcm-goal">0</span>%
-                            <span id="bcm-indicator" class="indicator">--</span>
-                        </div>
+                        <div class="card-subtext">Goal: <span id="bcm-goal">0</span>% <span id="bcm-indicator" class="indicator">--</span></div>
                     </div>
                     <div class="progress-wrapper"><div class="progress-fill" id="bcm-progress" style="background-color: var(--accent-purple-dark);"></div></div>
                 </div>
@@ -151,25 +150,18 @@
                 </div>
             </div>
 
-            <div class="section-label">BCM Performance (Averages)</div>
+            <div class="section-label">Retail Performance</div>
             <div class="metrics-grid">
-                <div class="card" style="min-height: 150px;">
+                <div class="card">
                     <div>
-                        <div class="card-header">Online Joins BCM%</div>
-                        <div class="card-value" id="online-bcm">0%</div>
+                        <div class="card-header">Total Retail Revenue</div>
+                        <div class="card-value" id="retail-total">$0.00</div>
+                        <div class="card-subtext">Selected Month Total</div>
                     </div>
                 </div>
-                <div class="card" style="min-height: 150px;">
-                    <div>
-                        <div class="card-header">Club Joins BCM%</div>
-                        <div class="card-value" id="club-bcm">0%</div>
-                    </div>
-                </div>
-                <div class="card" style="min-height: 150px;">
-                    <div>
-                        <div class="card-header">New Join BCM%</div>
-                        <div class="card-value" id="new-join-bcm">0%</div>
-                    </div>
+                <div class="card" style="grid-column: span 2; min-height: 220px;">
+                    <div class="card-header">Revenue by Profit Center</div>
+                    <div id="retail-breakdown" class="retail-list"></div>
                 </div>
             </div>
 
@@ -182,30 +174,45 @@
 
     <script>
         Chart.register(ChartDataLabels);
-        const CSV_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         
+        const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
+        const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
+
         const budgetData = {
-            'Coquitlam': { joins: { jan: 667, feb: 474, mar: 454 }, bcm: 50.92 },
-            'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61 },
-            'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02 }
+            'Coquitlam': { joins: { jan: 667, feb: 474, mar: 454 }, bcm: 50.92, formal: 'PLANET FITNESS COQUITLAM BC' },
+            'Langley': { joins: { jan: 543, feb: 374, mar: 386 }, bcm: 60.61, formal: 'PLANET FITNESS LANGLEY BC' },
+            'North Van': { joins: { jan: 332, feb: 291, mar: 285 }, bcm: 49.02, formal: 'PLANET FITNESS NORTH VANCOUVER BC' }
         };
 
-        let rawCSVRows = [];
-        let chartInstance = null;
-        let currentLocation = 'Coquitlam';
-        let selectedMonthIndex = new Date().getMonth(); 
+        let rawP = [], rawR = [], chartInstance = null, currentLocation = 'Coquitlam', selectedMonthIndex = new Date().getMonth(); 
 
-        function parseMobileDate(str) {
-            if (!str) return new Date(0);
-            const parts = str.split(/[-/]/);
-            if (parts.length === 3) {
-                if (parts[0].length === 4) return new Date(`${parts[0]}/${parts[1]}/${parts[2]}`);
-                return new Date(`${parts[2]}/${parts[0]}/${parts[1]}`);
-            }
-            return new Date(str);
+        // STRICT Date Parser with no fallback
+        function getMonthFromAnyDate(str) {
+            if (!str) return -1;
+            const parts = str.trim().split(/[-/]/);
+            if (parts.length < 3) return -1; 
+
+            // Strict check: One of the parts MUST be 2026
+            if (parts[0] === '2026') return parseInt(parts[1]) - 1; // YYYY-MM-DD
+            if (parts[2] === '2026') return parseInt(parts[0]) - 1; // MM-DD-YYYY or M/D/YYYY
+
+            return -1; // If 2026 is not found, discard row
         }
 
-        function cleanNum(val) { return parseFloat(val.toString().replace(/[%\$,\s]/g, '')) || 0; }
+        function cleanNum(val) { return parseFloat(val?.toString().replace(/[%\$,\s]/g, '')) || 0; }
+
+        async function syncData() {
+            try {
+                const [pResp, rResp] = await Promise.all([
+                    fetch(`${PERFORMANCE_URL}&v=${Date.now()}`),
+                    fetch(`${RETAIL_URL}&v=${Date.now()}`)
+                ]);
+                rawP = Papa.parse(await pResp.text(), { header: false }).data;
+                rawR = Papa.parse(await rResp.text(), { header: false }).data;
+                document.getElementById('sync-time').textContent = `Live: ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+                updateDashboard();
+            } catch (e) { console.error(e); }
+        }
 
         function updateIndicator(id, diff, suffix = "") {
             const el = document.getElementById(id);
@@ -215,81 +222,66 @@
             el.className = `indicator ${diff >= 0 ? "positive" : "negative"}`;
         }
 
-        async function syncData() {
-            try {
-                const response = await fetch(`${CSV_BASE_URL}&v=${Date.now()}`, { cache: 'no-store' });
-                const csvText = await response.text();
-                Papa.parse(csvText, {
-                    header: false,
-                    complete: (results) => {
-                        rawCSVRows = results.data;
-                        document.getElementById('sync-time').textContent = `Live: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                        updateDashboard();
-                    }
-                });
-            } catch (error) { console.error(error); }
-        }
-
         function updateDashboard() {
-            const monthKeys = ['jan', 'feb', 'mar'];
-            const currentMonthKey = monthKeys[selectedMonthIndex];
             const budget = budgetData[currentLocation];
-            const target = budget.joins[currentMonthKey]; // This now follows the tab index correctly
-
-            const matches = rawCSVRows.filter(r => {
-                const isLoc = r.some(cell => cell && cell.toString().toLowerCase().includes(currentLocation.toLowerCase()));
-                if (!isLoc) return false;
-                return parseMobileDate(r[4]).getMonth() === selectedMonthIndex;
-            });
-
+            const target = budget.joins[['jan','feb','mar'][selectedMonthIndex]];
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
-            if (matches.length === 0) { resetUI(target, budget.bcm); return; }
+            const pMatches = rawP.filter(r => 
+                r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase())) &&
+                getMonthFromAnyDate(r[4]) === selectedMonthIndex
+            );
 
-            let totalJoins = 0, sumOnline = 0, sumClub = 0, sumNew = 0;
-            matches.forEach(row => {
-                totalJoins += cleanNum(row[14]); 
-                sumOnline += cleanNum(row[30]);  
-                sumClub += cleanNum(row[29]);    
-                sumNew += cleanNum(row[31]);     
-            });
+            if (pMatches.length > 0) {
+                let j = 0; 
+                pMatches.forEach(r => { j += cleanNum(r[14]); });
+                const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
+                
+                document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
+                document.getElementById('joins-value').textContent = Math.round(j).toLocaleString();
+                document.getElementById('joins-target').textContent = target;
+                document.getElementById('joins-progress').style.width = Math.min((j/target)*100, 100)+'%';
+                updateIndicator('joins-indicator', j - target);
+                
+                const curBCM = cleanNum(lat[27]);
+                document.getElementById('bcm-value').textContent = curBCM.toFixed(2) + '%';
+                document.getElementById('bcm-goal').textContent = budget.bcm;
+                document.getElementById('bcm-progress').style.width = Math.min((curBCM/budget.bcm)*100, 100)+'%';
+                updateIndicator('bcm-indicator', curBCM - budget.bcm, "%");
 
-            const latestRow = matches.reduce((l, c) => parseMobileDate(c[4]) >= parseMobileDate(l[4]) ? c : l);
-            const bcmSnapshot = cleanNum(latestRow[27]);
+                document.getElementById('members-value').textContent = Math.round(cleanNum(lat[11])).toLocaleString();
+                document.getElementById('members-py').textContent = Math.round(cleanNum(lat[12])).toLocaleString();
+                document.getElementById('members-progress').style.width = Math.min((cleanNum(lat[11])/cleanNum(lat[12]))*100, 100)+'%';
 
-            document.getElementById('latest-entry-label').textContent = `Latest Entry: ${latestRow[4]}`;
-            
-            document.getElementById('joins-value').textContent = Math.round(totalJoins).toLocaleString();
-            document.getElementById('joins-target').textContent = target.toLocaleString();
-            document.getElementById('joins-progress').style.width = Math.min((totalJoins / target) * 100, 100) + '%';
-            updateIndicator('joins-indicator', totalJoins - target);
+                renderChart(j, target);
+            }
 
-            document.getElementById('bcm-value').textContent = bcmSnapshot.toFixed(2) + '%';
-            document.getElementById('bcm-goal').textContent = budget.bcm;
-            document.getElementById('bcm-progress').style.width = Math.min((bcmSnapshot / budget.bcm) * 100, 100) + '%';
-            updateIndicator('bcm-indicator', bcmSnapshot - budget.bcm, "%");
+            const rMatches = rawR.filter(r => 
+                r[2]?.toString().trim().toUpperCase() === budget.formal.toUpperCase() &&
+                getMonthFromAnyDate(r[0]) === selectedMonthIndex
+            );
 
-            document.getElementById('members-value').textContent = Math.round(cleanNum(latestRow[11])).toLocaleString();
-            document.getElementById('members-py').textContent = Math.round(cleanNum(latestRow[12])).toLocaleString();
-            document.getElementById('members-progress').style.width = Math.min((cleanNum(latestRow[11]) / cleanNum(latestRow[12])) * 100, 100) + '%';
+            const breakdown = document.getElementById('retail-breakdown');
+            breakdown.innerHTML = '';
+            let totalRev = 0;
 
-            document.getElementById('online-bcm').textContent = (sumOnline / matches.length).toFixed(2) + '%';
-            document.getElementById('club-bcm').textContent = (sumClub / matches.length).toFixed(2) + '%';
-            document.getElementById('new-join-bcm').textContent = (sumNew / matches.length).toFixed(2) + '%';
+            if (rMatches.length > 0) {
+                const groups = {};
+                rMatches.forEach(r => {
+                    const rev = cleanNum(r[12]); // Target Column M (Index 12)
+                    const cat = r[4] || "Other"; 
+                    totalRev += rev;
+                    groups[cat] = (groups[cat] || 0) + rev;
+                });
 
-            renderChart(totalJoins, target);
-        }
-
-        function resetUI(target, goal) {
-            ['joins-value', 'online-bcm', 'club-bcm', 'new-join-bcm', 'members-value', 'members-py'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.textContent = id.includes('bcm') ? '0.00%' : '0';
-            });
-            document.getElementById('latest-entry-label').textContent = "Latest Entry: No Data";
-            document.getElementById('joins-target').textContent = target; 
-            document.getElementById('joins-indicator').textContent = "--";
-            document.getElementById('bcm-indicator').textContent = "--";
-            renderChart(0, target);
+                document.getElementById('retail-total').textContent = `$${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+                Object.entries(groups).sort((a,b) => b[1]-a[1]).forEach(([k, v]) => {
+                    breakdown.innerHTML += `<div class="retail-item"><span class="retail-label">${k}</span><span>$${v.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>`;
+                });
+            } else {
+                document.getElementById('retail-total').textContent = '$0.00';
+                breakdown.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">No matching retail rows found.</div>';
+            }
         }
 
         function renderChart(actual, target) {
@@ -298,11 +290,7 @@
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: { labels: ['Actual', 'Goal'], datasets: [{ data: [actual, target], backgroundColor: ['#6b21a8', '#f0ede6'], borderRadius: 12 }] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', formatter: (v) => Math.round(v).toLocaleString(), font: { weight: 'bold' } } },
-                    scales: { y: { beginAtZero: true, suggestedMax: Math.max(actual, target) * 1.3 }, x: { grid: { display: false } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top' } } }
             });
         }
 
@@ -310,11 +298,18 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active'); currentLocation = this.dataset.location; updateDashboard();
         }));
-
+        
         document.querySelectorAll('.month-btn').forEach(btn => btn.addEventListener('click', function() {
             document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active'); selectedMonthIndex = parseInt(this.dataset.month); updateDashboard();
         }));
+
+        // AUTO-SELECT CURRENT MONTH BUTTON ON LOAD
+        const currentBtn = document.querySelector(`.month-btn[data-month="${selectedMonthIndex}"]`);
+        if (currentBtn) {
+            document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+            currentBtn.classList.add('active');
+        }
 
         syncData();
         setInterval(syncData, 300000);
