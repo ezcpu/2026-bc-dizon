@@ -18,6 +18,8 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         :root {
@@ -66,7 +68,21 @@
         .install-icon { font-size: 16px; }
 
         .main-content { flex: 1; padding: 40px 60px; width: 100%; overflow-x: hidden; }
-        .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 20px; }
+        
+        /* STICKY HEADER STYLES */
+        .top-header { 
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--bg-main); /* Ensures content doesn't show through */
+            padding-top: 10px; /* Breathing room */
+            padding-bottom: 10px;
+            backdrop-filter: blur(8px); /* Nice glass effect */
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0,0,0,0.03); /* Subtle separation */
+        }
+        
         .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
         
         .month-tabs { display: flex; gap: 12px; margin-bottom: 32px; border-bottom: 1px solid #e5e2d9; padding-bottom: 12px; }
@@ -240,24 +256,23 @@
         const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
 
-
         const budgetData = {
             'Coquitlam': { 
                 joins: { jan: 667, feb: 474, mar: 454 }, 
                 bcm: 50.92, 
-                labor: { jan: "95.78%", feb: "00.00%", mar: "00.00%"}, 
+                labor: { jan: "12.50%", feb: "12.50%", mar: "12.50%" }, 
                 formal: 'PLANET FITNESS COQUITLAM BC' 
             },
             'Langley': { 
                 joins: { jan: 543, feb: 374, mar: 386 }, 
                 bcm: 60.61, 
-                labor: { jan: "96.29%", feb: "00.00%", mar: "00.00%" }, 
+                labor: { jan: "13.00%", feb: "13.00%", mar: "13.00%" }, 
                 formal: 'PLANET FITNESS LANGLEY BC' 
             },
             'North Van': { 
                 joins: { jan: 332, feb: 291, mar: 285 }, 
                 bcm: 49.02, 
-                labor: { jan: "99.47%", feb: "00.00%", mar: "00.00%" }, 
+                labor: { jan: "11.00%", feb: "11.00%", mar: "11.00%" }, 
                 formal: 'PLANET FITNESS NORTH VANCOUVER BC' 
             }
         };
@@ -283,6 +298,7 @@
             }
         }
 
+        // STRICT Date Parser
         function getMonthFromAnyDate(str) {
             if (!str) return -1;
             const parts = str.trim().split(/[-/]/);
@@ -351,7 +367,6 @@
                 document.getElementById('members-value').textContent = Math.round(mtd).toLocaleString();
                 document.getElementById('members-py').textContent = Math.round(py).toLocaleString();
                 document.getElementById('members-progress').style.width = Math.min((mtd/py)*100, 100)+'%';
-                
                 
                 updateIndicator('members-yoy', mtd - py);
 
