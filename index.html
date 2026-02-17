@@ -36,7 +36,7 @@
 
         .sidebar { 
             width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid #e5e2d9; 
-            padding: 40px 24px; display: flex; flex-direction: column; 
+            padding: 60px 24px 24px 24px; display: flex; flex-direction: column; 
         }
         
         .logo { 
@@ -52,7 +52,6 @@
         }
         
         .nav-section { margin-bottom: auto; }
-        .nav-section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 20px; }
         .nav-btn { width: 100%; padding: 14px 16px; border-radius: 12px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; background: transparent; transition: 0.2s; margin-bottom: 8px; color: var(--text-muted); }
         .nav-btn:hover { background: #eeebe3; }
         .nav-btn.active { background: var(--accent-purple); color: var(--accent-purple-dark); }
@@ -69,24 +68,32 @@
 
         .main-content { flex: 1; padding: 40px 60px; width: 100%; overflow-x: hidden; }
         
-        /* STICKY HEADER STYLES */
+        /* STICKY HEADER */
         .top-header { 
-            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background-color: var(--bg-main); /* Ensures content doesn't show through */
-            padding-top: 10px; /* Breathing room */
-            padding-bottom: 10px;
-            backdrop-filter: blur(8px); /* Nice glass effect */
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(0,0,0,0.03); /* Subtle separation */
+            display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;
+            position: sticky; top: 0; z-index: 100;
+            background-color: var(--bg-main);
+            padding-top: 10px; padding-bottom: 16px;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0,0,0,0.03);
         }
+        .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .welcome-msg h1 { font-size: 32px; font-weight: 700; margin: 0; }
+
+        .nav-tabs-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         
-        .welcome-msg h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-        
-        .month-tabs { display: flex; gap: 12px; margin-bottom: 32px; border-bottom: 1px solid #e5e2d9; padding-bottom: 12px; }
-        .month-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #e5e2d9; background: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); }
+        .quarter-tabs { display: flex; gap: 8px; background: #e5e2d9; padding: 4px; border-radius: 12px; width: fit-content; }
+        .q-btn { 
+            padding: 6px 16px; border-radius: 8px; border: none; background: transparent; 
+            font-size: 12px; font-weight: 700; cursor: pointer; color: var(--text-muted); transition: 0.2s; 
+        }
+        .q-btn.active { background: white; color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .month-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        .month-btn { 
+            padding: 8px 16px; border-radius: 20px; border: 1px solid #e5e2d9; background: white; 
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-muted); white-space: nowrap;
+        }
         .month-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
 
         .section-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; padding-left: 4px; }
@@ -112,6 +119,13 @@
         .retail-item:last-child { border-bottom: none; }
         .retail-label { color: var(--text-muted); font-weight: 500; }
 
+        /* Ancillary Styles */
+        .ancillary-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0ede6; }
+        .ancillary-item:last-child { border-bottom: none; }
+        .anc-title { font-weight: 600; font-size: 13px; color: var(--text-main); }
+        .anc-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .anc-value { font-weight: 700; font-size: 14px; background: #e9d5ff; color: #6b21a8; padding: 4px 10px; border-radius: 8px; }
+
         .sync-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         .status-badge { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 14px; border-radius: 12px; border: 1px solid #e5e2d9; font-size: 11px; font-weight: 700; cursor: pointer; }
         .sync-indicator { width: 6px; height: 6px; background: var(--status-green); border-radius: 50%; animation: pulse 2s infinite; }
@@ -129,20 +143,16 @@
 
         @media (max-width: 1024px) {
             .app-container { flex-direction: column; }
-            .sidebar { 
-                width: 100%; 
-                padding: 60px 20px 20px 20px; 
-                border-right: none; 
-                border-bottom: 1px solid #e5e2d9; 
-            }
+            .sidebar { width: 100%; padding: 60px 20px 20px 20px; border-right: none; border-bottom: 1px solid #e5e2d9; }
             .nav-section { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; margin-bottom: 0; }
             .nav-btn { width: auto; white-space: nowrap; margin-bottom: 0; }
             .install-container { margin-top: 10px; border-top: none; padding-top: 0; }
             .main-content { padding: 24px 20px; }
             .metrics-grid { grid-template-columns: 1fr; }
             .card { min-height: auto; }
-            .sync-container { align-items: center; margin-top: 10px; }
-            .top-header { flex-direction: column; align-items: center; text-align: center; }
+            .sync-container { align-items: center; margin-top: 0; }
+            .top-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .header-row { align-items: flex-start; }
         }
     </style>
 </head>
@@ -169,20 +179,27 @@
 
         <main class="main-content">
             <header class="top-header">
-                <div class="welcome-msg">
-                    <h1 id="location-title">Performance Hub</h1>
+                <div class="header-row">
+                    <div class="welcome-msg">
+                        <h1 id="location-title">Performance Hub</h1>
+                    </div>
+                    <div class="sync-container">
+                        <div class="status-badge" onclick="syncData()"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
+                        <div id="latest-entry-label" class="latest-entry-label">Latest Entry: --</div>
+                    </div>
                 </div>
-                <div class="sync-container">
-                    <div class="status-badge" onclick="syncData()"><div class="sync-indicator"></div> <span id="sync-time">Syncing...</span></div>
-                    <div id="latest-entry-label" class="latest-entry-label">Latest Entry: --</div>
+
+                <div class="nav-tabs-container">
+                    <div class="quarter-tabs">
+                        <button class="q-btn active" onclick="setQuarter(0)">Q1</button>
+                        <button class="q-btn" onclick="setQuarter(1)">Q2</button>
+                        <button class="q-btn" onclick="setQuarter(2)">Q3</button>
+                        <button class="q-btn" onclick="setQuarter(3)">Q4</button>
+                    </div>
+                    <div class="month-tabs" id="month-list">
+                        </div>
                 </div>
             </header>
-
-            <div class="month-tabs">
-                <button class="month-btn active" data-month="0">January</button>
-                <button class="month-btn" data-month="1">February</button>
-                <button class="month-btn" data-month="2">March</button>
-            </div>
 
             <div class="section-label">Primary Metrics</div>
             <div class="metrics-grid">
@@ -239,6 +256,32 @@
                     <div id="retail-breakdown" class="retail-list"></div>
                 </div>
             </div>
+
+            <div class="section-label">Ancillary Budget 2026</div>
+            <div class="card" style="margin-bottom: 32px;">
+                <div class="ancillary-item">
+                    <div>
+                        <div class="anc-title">Offsites & Recognition</div>
+                        <div class="anc-subtitle">Walking Chats, Stay Interviews</div>
+                    </div>
+                    <div class="anc-value">$100/mo</div>
+                </div>
+                <div class="ancillary-item">
+                    <div>
+                        <div class="anc-title">Busy Season Meetings</div>
+                        <div class="anc-subtitle">With Team Members</div>
+                    </div>
+                    <div class="anc-value">$150/yr</div>
+                </div>
+                <div class="ancillary-item">
+                    <div>
+                        <div class="anc-title">Club Outing</div>
+                        <div class="anc-subtitle">Team Building Event</div>
+                    </div>
+                    <div class="anc-value">$700/yr</div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -260,25 +303,69 @@
             'Coquitlam': { 
                 joins: { jan: 667, feb: 474, mar: 454 }, 
                 bcm: 50.92, 
-                labor: { jan: "95.78%", feb: "00.00%", mar: "00.00%" }, 
+                labor: { jan: "95.78%", feb: "12.50%", mar: "12.50%" }, 
                 formal: 'PLANET FITNESS COQUITLAM BC' 
             },
             'Langley': { 
                 joins: { jan: 543, feb: 374, mar: 386 }, 
                 bcm: 60.61, 
-                labor: { jan: "96.29%", feb: "00.00%", mar: "00.00%" }, 
+                labor: { jan: "96.29%", feb: "13.00%", mar: "13.00%" }, 
                 formal: 'PLANET FITNESS LANGLEY BC' 
             },
             'North Van': { 
                 joins: { jan: 332, feb: 291, mar: 285 }, 
                 bcm: 49.02, 
-                labor: { jan: "99.47%", feb: "00.00%", mar: "00.00%" }, 
+                labor: { jan: "99.47%", feb: "11.00%", mar: "11.00%" }, 
                 formal: 'PLANET FITNESS NORTH VANCOUVER BC' 
             }
         };
 
-        let rawP = [], rawR = [], currentLocation = 'Coquitlam', selectedMonthIndex = new Date().getMonth(); 
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June", 
+            "July", "August", "September", "October", "November", "December"
+        ];
+        
+        const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+        let rawP = [], rawR = [], currentLocation = 'Coquitlam';
+        let selectedMonthIndex = new Date().getMonth(); 
         let deferredPrompt; 
+
+        // Initial setup
+        renderMonthTabs(Math.floor(selectedMonthIndex / 3));
+
+        function setQuarter(qIndex) {
+            document.querySelectorAll('.q-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', idx === qIndex);
+            });
+            renderMonthTabs(qIndex);
+        }
+
+        function renderMonthTabs(qIndex) {
+            const container = document.getElementById('month-list');
+            container.innerHTML = '';
+            
+            const startMonth = qIndex * 3;
+            const endMonth = startMonth + 3;
+            
+            if (selectedMonthIndex < startMonth || selectedMonthIndex >= endMonth) {
+                selectedMonthIndex = startMonth;
+            }
+
+            for (let i = startMonth; i < endMonth; i++) {
+                const btn = document.createElement('button');
+                btn.className = `month-btn ${i === selectedMonthIndex ? 'active' : ''}`;
+                btn.textContent = monthNames[i];
+                btn.onclick = () => {
+                    selectedMonthIndex = i;
+                    document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    updateDashboard();
+                };
+                container.appendChild(btn);
+            }
+            updateDashboard();
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -287,7 +374,6 @@
 
         function triggerInstall() {
             const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-            
             if (isIOS) {
                 document.getElementById('ios-install-modal').style.display = 'block';
             } else if (deferredPrompt) {
@@ -298,7 +384,6 @@
             }
         }
 
-        // STRICT Date Parser
         function getMonthFromAnyDate(str) {
             if (!str) return -1;
             const parts = str.trim().split(/[-/]/);
@@ -333,7 +418,9 @@
 
         function updateDashboard() {
             const budget = budgetData[currentLocation];
-            const target = budget.joins[['jan','feb','mar'][selectedMonthIndex]];
+            const mKey = monthKeys[selectedMonthIndex];
+            const target = budget.joins[mKey] || 0; 
+            
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
             const pMatches = rawP.filter(r => 
@@ -348,12 +435,16 @@
                     upg += cleanNum(r[25]); 
                     dwn += cleanNum(r[26]); 
                 });
+                
                 const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
                 
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
                 document.getElementById('joins-value').textContent = Math.round(j).toLocaleString();
                 document.getElementById('joins-target').textContent = target;
-                document.getElementById('joins-progress').style.width = Math.min((j/target)*100, 100)+'%';
+                
+                const progressWidth = target > 0 ? Math.min((j/target)*100, 100) : 0;
+                document.getElementById('joins-progress').style.width = progressWidth + '%';
+                
                 updateIndicator('joins-indicator', j - target);
                 
                 const curBCM = cleanNum(lat[27]);
@@ -366,17 +457,22 @@
                 const py = cleanNum(lat[12]);
                 document.getElementById('members-value').textContent = Math.round(mtd).toLocaleString();
                 document.getElementById('members-py').textContent = Math.round(py).toLocaleString();
-                document.getElementById('members-progress').style.width = Math.min((mtd/py)*100, 100)+'%';
+                document.getElementById('members-progress').style.width = (py > 0 ? Math.min((mtd/py)*100, 100) : 0) + '%';
                 
                 updateIndicator('members-yoy', mtd - py);
 
                 document.getElementById('upgrades-value').textContent = Math.round(upg).toLocaleString();
                 document.getElementById('downgrades-value').textContent = Math.round(dwn).toLocaleString();
                 
-                const monthKey = ['jan', 'feb', 'mar'][selectedMonthIndex];
-                const currentLabor = budget.labor[monthKey];
+                const currentLabor = budget.labor ? budget.labor[mKey] : "0.00%";
                 document.getElementById('labor-value').textContent = 
-                    typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : currentLabor;
+                    typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
+            } else {
+                document.getElementById('latest-entry-label').textContent = `Latest Entry: --`;
+                document.getElementById('joins-value').textContent = "0";
+                document.getElementById('joins-target').textContent = target;
+                document.getElementById('joins-progress').style.width = '0%';
+                updateIndicator('joins-indicator', 0);
             }
 
             const rMatches = rawR.filter(r => 
@@ -412,17 +508,6 @@
             this.classList.add('active'); currentLocation = this.dataset.location; updateDashboard();
         }));
         
-        document.querySelectorAll('.month-btn').forEach(btn => btn.addEventListener('click', function() {
-            document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active'); selectedMonthIndex = parseInt(this.dataset.month); updateDashboard();
-        }));
-
-        const currentBtn = document.querySelector(`.month-btn[data-month="${selectedMonthIndex}"]`);
-        if (currentBtn) {
-            document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-            currentBtn.classList.add('active');
-        }
-
         syncData();
         setInterval(syncData, 300000);
     </script>
