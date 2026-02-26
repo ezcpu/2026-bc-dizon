@@ -22,7 +22,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
-        /* [Your existing CSS remains exactly the same] */
         :root {
             --bg-main: #f4f1ea; --sidebar-bg: #f9f7f2; --card-bg: #ffffff;
             --text-main: #1a1a1a; --text-muted: #7c7c7c;
@@ -168,6 +167,7 @@
                 <button class="nav-btn" data-location="Coquitlam">Coquitlam</button>
                 <button class="nav-btn" data-location="Langley">Langley</button>
                 <button class="nav-btn" data-location="North Van">North Van</button>
+                <button class="nav-btn" data-location="White Rock">White Rock</button>
             </div>
             
             <div class="install-container">
@@ -295,15 +295,14 @@
         </div>
     </div>
 
-    <script>
+<script>
         const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
 
-        // Added 'All Clubs' aggregated targets
         const budgetData = {
             'All Clubs': {
-                joins: { jan: 1542, feb: 1139, mar: 1125 }, // Coquitlam + Langley + North Van sums
-                bcm: 53.52, // Average BCM target
+                joins: { jan: 1542, feb: 1139, mar: 1125 }, 
+                bcm: 53.52, 
                 labor: { jan: "Regional", feb: "Regional", mar: "Regional" }, 
                 formal: 'ALL CLUBS'
             },
@@ -324,6 +323,12 @@
                 bcm: 49.02, 
                 labor: { jan: "99.47%", feb: "11.00%", mar: "11.00%" }, 
                 formal: 'PLANET FITNESS NORTH VANCOUVER BC' 
+            },
+            'White Rock': { 
+                joins: { jan: 0, feb: 0, mar: 0 }, 
+                bcm: 0, 
+                labor: { jan: "0.00%", feb: "0.00%", mar: "0.00%" }, 
+                formal: 'PLANET FITNESS WHITE ROCK BC' 
             }
         };
 
@@ -334,7 +339,6 @@
         
         const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-        // Set default to All Clubs
         let rawP = [], rawR = [], currentLocation = 'All Clubs';
         let selectedMonthIndex = new Date().getMonth(); 
         let deferredPrompt; 
@@ -430,10 +434,9 @@
             
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
-            // Updated filtering logic to handle "All Clubs"
             const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
-                    ? ['Coquitlam', 'Langley', 'North Van'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
+                    ? ['Coquitlam', 'Langley', 'North Van', 'White Rock'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 return isMatch && getMonthFromAnyDate(r[4]) === selectedMonthIndex;
             });
@@ -459,10 +462,9 @@
 
                 let curBCM = 0, mtd = 0, py = 0;
 
-                // For "All Clubs", grab the latest MTD/BCM data for each individual club before combining them
                 if (currentLocation === 'All Clubs') {
                     let bcmTotal = 0, bcmCount = 0;
-                    ['Coquitlam', 'Langley', 'North Van'].forEach(club => {
+                    ['Coquitlam', 'Langley', 'North Van', 'White Rock'].forEach(club => {
                         const clubRows = pMatches.filter(r => r.some(c => c?.toString().toLowerCase().includes(club.toLowerCase())));
                         if (clubRows.length > 0) {
                             const clubLat = clubRows.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
@@ -497,18 +499,36 @@
                 document.getElementById('labor-value').textContent = 
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             } else {
+                // FIXED: Now we fully zero out everything when no records are found (e.g., White Rock)
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: --`;
+                
                 document.getElementById('joins-value').textContent = "0";
                 document.getElementById('joins-target').textContent = target;
                 document.getElementById('joins-progress').style.width = '0%';
-                updateIndicator('joins-indicator', 0);
+                updateIndicator('joins-indicator', 0 - target);
+
+                document.getElementById('bcm-value').textContent = '0.00%';
+                document.getElementById('bcm-goal').textContent = budget.bcm;
+                document.getElementById('bcm-progress').style.width = '0%';
+                updateIndicator('bcm-indicator', 0 - budget.bcm, "%");
+
+                document.getElementById('members-value').textContent = '0';
+                document.getElementById('members-py').textContent = '0';
+                document.getElementById('members-progress').style.width = '0%';
+                updateIndicator('members-yoy', 0);
+
+                document.getElementById('upgrades-value').textContent = '0';
+                document.getElementById('downgrades-value').textContent = '0';
+
+                const currentLabor = budget.labor ? budget.labor[mKey] : "0.00%";
+                document.getElementById('labor-value').textContent = 
+                    typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-            // Updated Retail mapping to handle "All Clubs"
             const rMatches = rawR.filter(r => {
                 const formalName = r[2]?.toString().trim().toUpperCase();
                 const isMatch = currentLocation === 'All Clubs'
-                    ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC'].includes(formalName)
+                    ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC', 'PLANET FITNESS WHITE ROCK BC'].includes(formalName)
                     : formalName === budget.formal.toUpperCase();
                 return isMatch && getMonthFromAnyDate(r[0]) === selectedMonthIndex;
             });
