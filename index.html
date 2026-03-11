@@ -191,7 +191,7 @@
 
                 <div class="nav-tabs-container">
                     <div class="quarter-tabs">
-                        <button class="q-btn active" onclick="setQuarter(0)">Q1</button>
+                        <button class="q-btn" onclick="setQuarter(0)">Q1</button>
                         <button class="q-btn" onclick="setQuarter(1)">Q2</button>
                         <button class="q-btn" onclick="setQuarter(2)">Q3</button>
                         <button class="q-btn" onclick="setQuarter(3)">Q4</button>
@@ -205,7 +205,7 @@
             <div class="metrics-grid">
                 <div class="card">
                     <div>
-                        <div class="card-header">Monthly Joins</div>
+                        <div class="card-header" id="joins-label">Monthly Joins</div>
                         <div class="card-value" id="joins-value">0</div>
                         <div class="card-subtext">Goal: <span id="joins-target">0</span> <span id="joins-indicator" class="indicator">--</span></div>
                     </div>
@@ -221,7 +221,7 @@
                 </div>
                 <div class="card">
                     <div>
-                        <div class="card-header">MTD Members</div>
+                        <div class="card-header" id="mtd-label">MTD Members</div>
                         <div class="card-value" id="members-value">0</div>
                         <div class="card-subtext">
                             PY: <span id="members-py">0</span>
@@ -248,7 +248,7 @@
                     <div>
                         <div class="card-header">Total Retail Revenue</div>
                         <div class="card-value" id="retail-total">$0.00</div>
-                        <div class="card-subtext">Selected Month Total</div>
+                        <div class="card-subtext" id="retail-subtitle">Selected Month Total</div>
                     </div>
                 </div>
                 <div class="card" style="grid-column: span 2; min-height: 220px;">
@@ -341,11 +341,20 @@
 
         let rawP = [], rawR = [], currentLocation = 'All Clubs';
         let selectedMonthIndex = new Date().getMonth(); 
+        let selectedQuarterIndex = Math.floor(selectedMonthIndex / 3);
+        let viewMode = 'month'; // 'month' or 'quarter'
         let deferredPrompt; 
 
-        renderMonthTabs(Math.floor(selectedMonthIndex / 3));
+        // Initialize Quarter Button
+        document.querySelectorAll('.q-btn').forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === selectedQuarterIndex);
+        });
+        
+        renderMonthTabs(selectedQuarterIndex);
 
         function setQuarter(qIndex) {
+            selectedQuarterIndex = qIndex;
+            viewMode = 'quarter'; // Setting mode to quarter to sum up data
             document.querySelectorAll('.q-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', idx === qIndex);
             });
@@ -359,15 +368,18 @@
             const startMonth = qIndex * 3;
             const endMonth = startMonth + 3;
             
-            if (selectedMonthIndex < startMonth || selectedMonthIndex >= endMonth) {
-                selectedMonthIndex = startMonth;
+            // If viewing a month outside the newly selected quarter, default to quarter view
+            if (viewMode === 'month' && (selectedMonthIndex < startMonth || selectedMonthIndex >= endMonth)) {
+                viewMode = 'quarter';
             }
 
             for (let i = startMonth; i < endMonth; i++) {
                 const btn = document.createElement('button');
-                btn.className = `month-btn ${i === selectedMonthIndex ? 'active' : ''}`;
+                // Only highlight the month if we are in 'month' view
+                btn.className = `month-btn ${(viewMode === 'month' && i === selectedMonthIndex) ? 'active' : ''}`;
                 btn.textContent = monthNames[i];
                 btn.onclick = () => {
+                    viewMode = 'month';
                     selectedMonthIndex = i;
                     document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -429,16 +441,32 @@
 
         function updateDashboard() {
             const budget = budgetData[currentLocation];
-            const mKey = monthKeys[selectedMonthIndex];
-            const target = budget.joins[mKey] || 0; 
+            const startM = selectedQuarterIndex * 3;
+            // Determine which months to pull based on viewMode
+            const validMonths = viewMode === 'quarter' ? [startM, startM + 1, startM + 2] : [selectedMonthIndex];
             
+            // Sum up target goals based on active months
+            let target = 0;
+            validMonths.forEach(m => {
+                const mKey = monthKeys[m];
+                if (budget.joins && budget.joins[mKey]) {
+                    target += budget.joins[mKey];
+                }
+            });
+            
+            // Dynamic Label Updates
+            document.getElementById('joins-label').textContent = viewMode === 'quarter' ? 'Quarterly Joins' : 'Monthly Joins';
+            document.getElementById('mtd-label').textContent = viewMode === 'quarter' ? 'QTD Members' : 'MTD Members';
+            document.getElementById('retail-subtitle').textContent = viewMode === 'quarter' ? 'Selected Quarter Total' : 'Selected Month Total';
+
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
             const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
                     ? ['Coquitlam', 'Langley', 'North Van', 'White Rock'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
-                return isMatch && getMonthFromAnyDate(r[4]) === selectedMonthIndex;
+                const rowMonth = getMonthFromAnyDate(r[4]);
+                return isMatch && validMonths.includes(rowMonth);
             });
 
             if (pMatches.length > 0) {
@@ -449,6 +477,7 @@
                     dwn += cleanNum(r[26]); 
                 });
                 
+                // For snapshot metrics (BCM and Total Members), grab the latest entry available in the selected months
                 const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
                 
@@ -495,11 +524,17 @@
                 document.getElementById('upgrades-value').textContent = Math.round(upg).toLocaleString();
                 document.getElementById('downgrades-value').textContent = Math.round(dwn).toLocaleString();
                 
-                const currentLabor = budget.labor ? budget.labor[mKey] : "0.00%";
+                let currentLabor = "0.00%";
+                if (viewMode === 'quarter') {
+                    // For quarter, fetch the latest available month in that quarter that exists in the budget
+                    currentLabor = budget.labor ? (budget.labor[monthKeys[startM + 2]] || budget.labor[monthKeys[startM + 1]] || budget.labor[monthKeys[startM]]) : "0.00%";
+                } else {
+                    currentLabor = budget.labor ? budget.labor[monthKeys[selectedMonthIndex]] : "0.00%";
+                }
+                
                 document.getElementById('labor-value').textContent = 
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             } else {
-                // FIXED: Now we fully zero out everything when no records are found (e.g., White Rock)
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: --`;
                 
                 document.getElementById('joins-value').textContent = "0";
@@ -520,7 +555,13 @@
                 document.getElementById('upgrades-value').textContent = '0';
                 document.getElementById('downgrades-value').textContent = '0';
 
-                const currentLabor = budget.labor ? budget.labor[mKey] : "0.00%";
+                let currentLabor = "0.00%";
+                if (viewMode === 'quarter') {
+                    currentLabor = budget.labor ? (budget.labor[monthKeys[startM + 2]] || budget.labor[monthKeys[startM + 1]] || budget.labor[monthKeys[startM]]) : "0.00%";
+                } else {
+                    currentLabor = budget.labor ? budget.labor[monthKeys[selectedMonthIndex]] : "0.00%";
+                }
+                
                 document.getElementById('labor-value').textContent = 
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
@@ -530,7 +571,8 @@
                 const isMatch = currentLocation === 'All Clubs'
                     ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC', 'PLANET FITNESS WHITE ROCK BC'].includes(formalName)
                     : formalName === budget.formal.toUpperCase();
-                return isMatch && getMonthFromAnyDate(r[0]) === selectedMonthIndex;
+                const rowMonth = getMonthFromAnyDate(r[0]);
+                return isMatch && validMonths.includes(rowMonth);
             });
 
             const breakdown = document.getElementById('retail-breakdown');
