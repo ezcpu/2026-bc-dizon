@@ -526,8 +526,14 @@
                 
                 let currentLabor = "0.00%";
                 if (viewMode === 'quarter') {
-                    // For quarter, fetch the latest available month in that quarter that exists in the budget
-                    currentLabor = budget.labor ? (budget.labor[monthKeys[startM + 2]] || budget.labor[monthKeys[startM + 1]] || budget.labor[monthKeys[startM]]) : "0.00%";
+                    // Scan backward through the quarter's months to find the most recent valid KPI
+                    for (let i = 2; i >= 0; i--) {
+                        let lab = budget.labor ? budget.labor[monthKeys[startM + i]] : null;
+                        if (lab && lab !== "0.00%" && lab !== 0) {
+                            currentLabor = lab;
+                            break;
+                        }
+                    }
                 } else {
                     currentLabor = budget.labor ? budget.labor[monthKeys[selectedMonthIndex]] : "0.00%";
                 }
