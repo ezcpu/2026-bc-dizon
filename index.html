@@ -461,9 +461,9 @@
 
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
-            const pMatches = rawP.filter(r => {
+          const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
-                    ? ['Coquitlam', 'Langley', 'North Van', 'White Rock'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
+                    ? ['Coquitlam', 'Langley', 'North Van'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 const rowMonth = getMonthFromAnyDate(r[4]);
                 return isMatch && validMonths.includes(rowMonth);
@@ -493,7 +493,7 @@
 
                 if (currentLocation === 'All Clubs') {
                     let bcmTotal = 0, bcmCount = 0;
-                    ['Coquitlam', 'Langley', 'North Van', 'White Rock'].forEach(club => {
+                    ['Coquitlam', 'Langley', 'North Van'].forEach(club => {
                         const clubRows = pMatches.filter(r => r.some(c => c?.toString().toLowerCase().includes(club.toLowerCase())));
                         if (clubRows.length > 0) {
                             const clubLat = clubRows.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
@@ -572,10 +572,10 @@
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-            const rMatches = rawR.filter(r => {
+        const rMatches = rawR.filter(r => {
                 const formalName = r[2]?.toString().trim().toUpperCase();
                 const isMatch = currentLocation === 'All Clubs'
-                    ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC', 'PLANET FITNESS WHITE ROCK BC'].includes(formalName)
+                    ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC'].includes(formalName)
                     : formalName === budget.formal.toUpperCase();
                 const rowMonth = getMonthFromAnyDate(r[0]);
                 return isMatch && validMonths.includes(rowMonth);
