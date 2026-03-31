@@ -18,8 +18,6 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         :root {
@@ -113,6 +111,43 @@
         .progress-wrapper { margin-top: 16px; height: 8px; background: #f0ede6; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; background: var(--accent-purple-dark); border-radius: 10px; }
 
+        /* Mobile-Friendly Daily List Styles */
+        .daily-list {
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 8px;
+            margin-top: 8px;
+        }
+        .daily-list::-webkit-scrollbar { width: 6px; }
+        .daily-list::-webkit-scrollbar-track { background: transparent; }
+        .daily-list::-webkit-scrollbar-thumb { background: #e5e2d9; border-radius: 4px; }
+        
+        .daily-list-item {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 12px;
+            margin-bottom: 6px;
+            border-radius: 12px;
+            z-index: 1;
+        }
+        .daily-bar-bg {
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            background-color: var(--accent-purple);
+            opacity: 0.4;
+            border-radius: 12px;
+            z-index: -1;
+            transition: width 0.6s ease-out;
+        }
+        .daily-date { 
+            font-weight: 600; font-size: 13px; color: var(--text-main); 
+        }
+        .daily-val { 
+            font-weight: 800; font-size: 15px; color: var(--accent-purple-dark); 
+        }
+
         .retail-list { margin-top: 10px; }
         .retail-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0ede6; font-size: 13px; font-weight: 600; }
         .retail-item:last-child { border-bottom: none; }
@@ -203,10 +238,10 @@
 
             <div id="wr-presale-container" style="display: none; margin-bottom: 32px;">
                 <div class="section-label">Pre-Sale Daily Joins (White Rock)</div>
-                <div class="card" style="min-height: 280px; padding: 24px;">
-                    <div style="position: relative; height: 230px; width: 100%;">
-                        <canvas id="wrDailyChart"></canvas>
-                    </div>
+                <div class="card" style="padding: 24px;">
+                    <div class="card-header" style="margin-bottom: 12px;">Most Recent</div>
+                    <div id="wr-daily-list" class="daily-list">
+                        </div>
                 </div>
             </div>
 
@@ -351,9 +386,8 @@
         let rawP = [], rawR = [], currentLocation = 'All Clubs';
         let selectedMonthIndex = new Date().getMonth(); 
         let selectedQuarterIndex = Math.floor(selectedMonthIndex / 3);
-        let viewMode = 'month'; // 'month' or 'quarter'
+        let viewMode = 'month'; 
         let deferredPrompt; 
-        let wrChartInstance = null; // Added for White Rock Daily Chart
 
         // Initialize Quarter Button
         document.querySelectorAll('.q-btn').forEach((btn, idx) => {
@@ -364,7 +398,7 @@
 
         function setQuarter(qIndex) {
             selectedQuarterIndex = qIndex;
-            viewMode = 'quarter'; // Setting mode to quarter to sum up data
+            viewMode = 'quarter'; 
             document.querySelectorAll('.q-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', idx === qIndex);
             });
@@ -378,14 +412,12 @@
             const startMonth = qIndex * 3;
             const endMonth = startMonth + 3;
             
-            // If viewing a month outside the newly selected quarter, default to quarter view
             if (viewMode === 'month' && (selectedMonthIndex < startMonth || selectedMonthIndex >= endMonth)) {
                 viewMode = 'quarter';
             }
 
             for (let i = startMonth; i < endMonth; i++) {
                 const btn = document.createElement('button');
-                // Only highlight the month if we are in 'month' view
                 btn.className = `month-btn ${(viewMode === 'month' && i === selectedMonthIndex) ? 'active' : ''}`;
                 btn.textContent = monthNames[i];
                 btn.onclick = () => {
@@ -452,10 +484,8 @@
         function updateDashboard() {
             const budget = budgetData[currentLocation];
             const startM = selectedQuarterIndex * 3;
-            // Determine which months to pull based on viewMode
             const validMonths = viewMode === 'quarter' ? [startM, startM + 1, startM + 2] : [selectedMonthIndex];
             
-            // Sum up target goals based on active months
             let target = 0;
             validMonths.forEach(m => {
                 const mKey = monthKeys[m];
@@ -464,7 +494,6 @@
                 }
             });
             
-            // Dynamic Label Updates
             document.getElementById('joins-label').textContent = viewMode === 'quarter' ? 'Quarterly Joins' : 'Monthly Joins';
             document.getElementById('mtd-label').textContent = viewMode === 'quarter' ? 'QTD Members' : 'MTD Members';
             document.getElementById('retail-subtitle').textContent = viewMode === 'quarter' ? 'Selected Quarter Total' : 'Selected Month Total';
@@ -479,54 +508,65 @@
                 return isMatch && validMonths.includes(rowMonth);
             });
 
-            // --- White Rock Pre-Sale Chart Logic ---
+            // --- Mobile Friendly List View for White Rock Pre-Sale ---
             const wrContainer = document.getElementById('wr-presale-container');
+            const wrList = document.getElementById('wr-daily-list');
+            
             if (currentLocation === 'White Rock') {
                 wrContainer.style.display = 'block';
+                wrList.innerHTML = ''; // Clear previous
                 
-                // Aggregate daily joins for White Rock
+                // Aggregate daily joins
                 const dailyData = {};
                 pMatches.forEach(r => {
-                    const dateStr = r[4]; // Extract the raw date
+                    const dateStr = r[4]; 
                     const joins = cleanNum(r[14]);
                     if (dateStr) {
                         dailyData[dateStr] = (dailyData[dateStr] || 0) + joins;
                     }
                 });
                 
+                // Sort chronologically, then reverse so newest is at top
                 const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
-                const chartValues = sortedDates.map(d => dailyData[d]);
+                const reversedDates = [...sortedDates].reverse();
                 
-                const ctx = document.getElementById('wrDailyChart').getContext('2d');
-                if (wrChartInstance) wrChartInstance.destroy();
-                
-                wrChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: sortedDates,
-                        datasets: [{
-                            label: 'Daily Joins',
-                            data: chartValues,
-                            backgroundColor: '#6b21a8',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { precision: 0 } },
-                            x: { grid: { display: false } }
+                // Find max for the progress bar background width
+                const maxJoins = Math.max(...Object.values(dailyData), 1); 
+
+                if (reversedDates.length === 0) {
+                    wrList.innerHTML = '<div style="color:var(--text-muted); font-size:13px; padding:12px;">No pre-sale data found for this period.</div>';
+                } else {
+                    reversedDates.forEach(d => {
+                        const joins = dailyData[d];
+                        const pct = (joins / maxJoins) * 100;
+                        
+                        // Format date to be short (e.g. MM/DD)
+                        const parts = d.split(/[-/]/);
+                        let shortDate = d;
+                        if (parts.length >= 3) {
+                            shortDate = d.includes('/') ? `${parts[0]}/${parts[1]}` : `${parts[1]}/${parts[2]}`;
                         }
-                    }
-                });
+                        
+                        // Parse full date for a nicer display (e.g., "Mon, Mar 12")
+                        const dateObj = new Date(d);
+                        let displayDate = shortDate;
+                        if (!isNaN(dateObj)) {
+                            displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        }
+
+                        wrList.innerHTML += `
+                            <div class="daily-list-item">
+                                <div class="daily-bar-bg" style="width: ${pct}%"></div>
+                                <div class="daily-date">${displayDate}</div>
+                                <div class="daily-val">+${joins}</div>
+                            </div>
+                        `;
+                    });
+                }
             } else {
                 wrContainer.style.display = 'none';
             }
-            // ---------------------------------------
+            // ---------------------------------------------------------
 
             if (pMatches.length > 0) {
                 let j = 0, upg = 0, dwn = 0;
@@ -536,7 +576,6 @@
                     dwn += cleanNum(r[26]); 
                 });
                 
-                // For snapshot metrics (BCM and Total Members), grab the latest entry available in the selected months
                 const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
                 
@@ -585,7 +624,6 @@
                 
                 let currentLabor = "0.00%";
                 if (viewMode === 'quarter') {
-                    // Scan backward through the quarter's months to find the most recent valid KPI
                     for (let i = 2; i >= 0; i--) {
                         let lab = budget.labor ? budget.labor[monthKeys[startM + i]] : null;
                         if (lab && lab !== "0.00%" && lab !== 0) {
