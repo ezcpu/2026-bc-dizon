@@ -201,6 +201,15 @@
                 </div>
             </header>
 
+            <div id="wr-presale-container" style="display: none; margin-bottom: 32px;">
+                <div class="section-label">Pre-Sale Daily Joins (White Rock)</div>
+                <div class="card" style="min-height: 280px; padding: 24px;">
+                    <div style="position: relative; height: 230px; width: 100%;">
+                        <canvas id="wrDailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="section-label">Primary Metrics</div>
             <div class="metrics-grid">
                 <div class="card">
@@ -344,6 +353,7 @@
         let selectedQuarterIndex = Math.floor(selectedMonthIndex / 3);
         let viewMode = 'month'; // 'month' or 'quarter'
         let deferredPrompt; 
+        let wrChartInstance = null; // Added for White Rock Daily Chart
 
         // Initialize Quarter Button
         document.querySelectorAll('.q-btn').forEach((btn, idx) => {
@@ -461,13 +471,62 @@
 
             document.getElementById('location-title').textContent = `${currentLocation} Hub`;
 
-          const pMatches = rawP.filter(r => {
+            const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
                     ? ['Coquitlam', 'Langley', 'North Van'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 const rowMonth = getMonthFromAnyDate(r[4]);
                 return isMatch && validMonths.includes(rowMonth);
             });
+
+            // --- White Rock Pre-Sale Chart Logic ---
+            const wrContainer = document.getElementById('wr-presale-container');
+            if (currentLocation === 'White Rock') {
+                wrContainer.style.display = 'block';
+                
+                // Aggregate daily joins for White Rock
+                const dailyData = {};
+                pMatches.forEach(r => {
+                    const dateStr = r[4]; // Extract the raw date
+                    const joins = cleanNum(r[14]);
+                    if (dateStr) {
+                        dailyData[dateStr] = (dailyData[dateStr] || 0) + joins;
+                    }
+                });
+                
+                const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
+                const chartValues = sortedDates.map(d => dailyData[d]);
+                
+                const ctx = document.getElementById('wrDailyChart').getContext('2d');
+                if (wrChartInstance) wrChartInstance.destroy();
+                
+                wrChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [{
+                            label: 'Daily Joins',
+                            data: chartValues,
+                            backgroundColor: '#6b21a8',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { precision: 0 } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            } else {
+                wrContainer.style.display = 'none';
+            }
+            // ---------------------------------------
 
             if (pMatches.length > 0) {
                 let j = 0, upg = 0, dwn = 0;
@@ -572,7 +631,7 @@
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-        const rMatches = rawR.filter(r => {
+            const rMatches = rawR.filter(r => {
                 const formalName = r[2]?.toString().trim().toUpperCase();
                 const isMatch = currentLocation === 'All Clubs'
                     ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC'].includes(formalName)
