@@ -449,14 +449,29 @@
             }
         }
 
-        function getMonthFromAnyDate(str) {
-            if (!str) return -1;
-            const parts = str.trim().split(/[-/]/);
-            if (parts.length < 3) return -1; 
-            if (parts[0] === '2026') return parseInt(parts[1]) - 1; 
-            if (parts[2] === '2026') return parseInt(parts[0]) - 1; 
-            return -1; 
-        }
+function getMonthFromAnyDate(str) {
+    if (!str) return -1;
+    const s = str.toString().trim();
+    
+    // Extract just the date part, dropping any time strings like " 12:00:00"
+    const dateStr = s.split(/[\sT]/)[0]; 
+    const parts = dateStr.split(/[-/]/);
+    
+    if (parts.length >= 3) {
+        // Handle Format: YYYY-MM-DD
+        if (parts[0] === '2026') return parseInt(parts[1], 10) - 1;
+        // Handle Format: MM/DD/YYYY or MM/DD/YY
+        if (parts[2] === '2026' || parts[2] === '26') return parseInt(parts[0], 10) - 1;
+    }
+    
+    // Fallback: Native JS Date parsing
+    const d = new Date(s);
+    if (!isNaN(d.getTime()) && d.getFullYear() === 2026) {
+        return d.getMonth();
+    }
+    
+    return -1;
+}
 
         function cleanNum(val) { return parseFloat(val?.toString().replace(/[%\$,\s]/g, '')) || 0; }
 
