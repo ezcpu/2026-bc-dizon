@@ -684,11 +684,26 @@ function getMonthFromAnyDate(str) {
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-            const rMatches = rawR.filter(r => {
-                const formalName = r[2]?.toString().trim().toUpperCase();
-                const isMatch = currentLocation === 'All Clubs'
-                    ? ['PLANET FITNESS COQUITLAM BC', 'PLANET FITNESS LANGLEY BC', 'PLANET FITNESS NORTH VANCOUVER BC'].includes(formalName)
-                    : formalName === budget.formal.toUpperCase();
+const rMatches = rawR.filter(r => {
+                const formalName = r[2]?.toString().replace(/\s+/g, ' ').trim().toUpperCase() || "";
+                
+                // Define the unbreakable core keywords for each location
+                const locKeywords = {
+                    'Coquitlam': 'COQUITLAM',
+                    'Langley': 'LANGLEY',
+                    'North Van': 'NORTH VANCOUVER', 
+                    'White Rock': 'WHITE ROCK'
+                };
+
+                let isMatch = false;
+                if (currentLocation === 'All Clubs') {
+                    isMatch = ['COQUITLAM', 'LANGLEY', 'NORTH VANCOUVER', 'WHITE ROCK'].some(loc => formalName.includes(loc));
+                } else {
+                    // Match only on the core keyword rather than the exact full formal string
+                    const keyword = locKeywords[currentLocation];
+                    isMatch = keyword ? formalName.includes(keyword) : false;
+                }
+
                 const rowMonth = getMonthFromAnyDate(r[0]);
                 return isMatch && validMonths.includes(rowMonth);
             });
@@ -701,15 +716,25 @@ function getMonthFromAnyDate(str) {
                 const groups = {};
                 rMatches.forEach(r => {
                     const rev = cleanNum(r[12]); 
-                    const cat = r[4] || "Other"; 
+                    
+                    // 2. NORMALIZE CATEGORY NAMES to prevent split lines
+                    let rawCat = r[4]?.toString().trim() || "Other";
+                    // Enforce Title Case (e.g., "cooler drinks" -> "Cooler Drinks")
+                    let cat = rawCat.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
                     totalRev += rev;
                     groups[cat] = (groups[cat] || 0) + rev;
                 });
 
                 document.getElementById('retail-total').textContent = `$${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-                Object.entries(groups).sort((a,b) => b[1]-a[1]).forEach(([k, v]) => {
-                    breakdown.innerHTML += `<div class="retail-item"><span class="retail-label">${k}</span><span>$${v.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>`;
-                });
+                
+                // Only show categories that actually have revenue (filter out $0 categories just in case)
+                Object.entries(groups)
+                    .filter(([k, v]) => v !== 0) 
+                    .sort((a,b) => b[1]-a[1])
+                    .forEach(([k, v]) => {
+                        breakdown.innerHTML += `<div class="retail-item"><span class="retail-label">${k}</span><span>$${v.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>`;
+                    });
             } else {
                 document.getElementById('retail-total').textContent = '$0.00';
                 breakdown.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">No matching retail rows found.</div>';
