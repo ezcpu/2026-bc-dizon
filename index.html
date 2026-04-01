@@ -172,8 +172,6 @@
         .ios-icon { width: 24px; height: 24px; vertical-align: middle; margin: 0 4px; }
         .close-modal { position: absolute; top: 16px; right: 16px; font-size: 24px; cursor: pointer; color: #999; }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
         @media (max-width: 1024px) {
             .app-container { flex-direction: column; }
             .sidebar { width: 100%; padding: 60px 20px 20px 20px; border-right: none; border-bottom: 1px solid #e5e2d9; }
@@ -288,12 +286,16 @@
 
             <div class="section-label">Retail Performance</div>
             <div class="metrics-grid">
-                <div class="card">
+                <div class="card" style="align-self: start; min-height: auto;">
                     <div>
-                        <div class="card-header">Total Retail Revenue</div>
+                        <div class="card-header">Total Retail Revenue (CAD)</div>
                         <div class="card-value" id="retail-total">$0.00</div>
-                        <div class="card-subtext" id="retail-subtitle">Selected Month Total</div>
+                        <div class="card-subtext" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 6px;">
+                            <span><span id="retail-subtitle">Selected Month Total</span> <span style="font-size:11px;">(~$<span id="retail-total-usd">0.00</span> USD)</span></span>
+                            <span>Goal: $<span id="retail-goal-cad" style="font-weight:700;">0</span> <span style="font-size:10px;">(~$<span id="retail-goal-usd">0</span> USD)</span></span>
+                        </div>
                     </div>
+                    <div class="progress-wrapper"><div class="progress-fill" id="retail-progress" style="background-color: var(--status-green);"></div></div>
                 </div>
                 <div class="card" style="grid-column: span 2; min-height: 220px;">
                     <div class="card-header">Revenue by Profit Center</div>
@@ -343,35 +345,40 @@
         const PERFORMANCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?output=csv';
         const RETAIL_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3wO2kEeMBkpwGu8WRho8oD7OJn02F3JPun-Lot-kyVs-137H6C68Y4N6WBh21H-WfLrSmT34030Hx/pub?gid=1518573577&single=true&output=csv';
 
-       const budgetData = {
+        const budgetData = {
             'All Clubs': {
                 joins: { jan: 1542, feb: 1141, mar: 1485, apr: 1540, may: 2076, jun: 1897, jul: 1675, aug: 1472, sep: 2181, oct: 1526, nov: 1664, dec: 1636 }, 
                 bcm: 53.79, 
                 labor: { jan: "95.97%", feb: "95.97%", mar: "95.68%" }, 
+                retail: { jan: 7277, feb: 6025, mar: 8346, apr: 7446, may: 13093, jun: 12492, jul: 12744, aug: 10945, sep: 10270, oct: 10150, nov: 10952, dec: 10425 },
                 formal: 'ALL CLUBS'
             },
             'Coquitlam': { 
                 joins: { jan: 667, feb: 476, mar: 454, apr: 469, may: 378, jun: 288, jul: 343, aug: 370, sep: 632, oct: 373, nov: 356, dec: 417 }, 
                 bcm: 50.92, 
                 labor: { jan: "95.78%", feb: "95.90%", mar: "98.13%" }, 
+                retail: { jan: 2193, feb: 2067, mar: 2587, apr: 2547, may: 3201, jun: 2836, jul: 2982, aug: 2398, sep: 2569, oct: 2310, nov: 2223, dec: 2081 },
                 formal: 'PLANET FITNESS COQUITLAM BC' 
             },
             'Langley': { 
                 joins: { jan: 543, feb: 374, mar: 386, apr: 377, may: 306, jun: 265, jul: 296, aug: 271, sep: 487, oct: 339, nov: 331, dec: 356 }, 
                 bcm: 60.61, 
                 labor: { jan: "96.29%", feb: "94.34%", mar: "92.71%" }, 
+                retail: { jan: 3344, feb: 2617, mar: 3826, apr: 3179, may: 3606, jun: 3612, jul: 3509, aug: 2976, sep: 2725, oct: 2979, nov: 3241, dec: 2594 },
                 formal: 'PLANET FITNESS LANGLEY BC' 
             },
             'North Van': { 
                 joins: { jan: 332, feb: 291, mar: 285, apr: 244, may: 264, jun: 173, jul: 206, aug: 180, sep: 364, oct: 227, nov: 190, dec: 245 }, 
                 bcm: 49.02, 
                 labor: { jan: "99.47%", feb: "98.22%", mar: "96.34%" }, 
+                retail: { jan: 1740, feb: 1341, mar: 1933, apr: 1720, may: 2129, jun: 2018, jul: 2130, aug: 1670, sep: 1544, oct: 1733, nov: 2269, dec: 1961 },
                 formal: 'PLANET FITNESS NORTH VANCOUVER BC' 
             },
             'White Rock': { 
                 joins: { jan: 0, feb: 0, mar: 360, apr: 450, may: 1128, jun: 1171, jul: 830, aug: 651, sep: 698, oct: 587, nov: 787, dec: 618 }, 
                 bcm: 0, 
                 labor: { jan: "0.00%", feb: "0.00%", mar: "0.00%" }, 
+                retail: { jan: 0, feb: 0, mar: 0, apr: 0, may: 4157, jun: 4026, jul: 4123, aug: 3901, sep: 3432, oct: 3128, nov: 3219, dec: 3789 },
                 formal: 'PLANET FITNESS WHITE ROCK BC' 
             }
         };
@@ -388,6 +395,9 @@
         let selectedQuarterIndex = Math.floor(selectedMonthIndex / 3);
         let viewMode = 'month'; 
         let deferredPrompt; 
+        
+        // Default exchange rate fallback
+        let exchangeRateUSDToCAD = 1.35; 
 
         // Initialize Quarter Button
         document.querySelectorAll('.q-btn').forEach((btn, idx) => {
@@ -449,33 +459,51 @@
             }
         }
 
-function getMonthFromAnyDate(str) {
-    if (!str) return -1;
-    const s = str.toString().trim();
-    
-    // Extract just the date part, dropping any time strings like " 12:00:00"
-    const dateStr = s.split(/[\sT]/)[0]; 
-    const parts = dateStr.split(/[-/]/);
-    
-    if (parts.length >= 3) {
-        // Handle Format: YYYY-MM-DD
-        if (parts[0] === '2026') return parseInt(parts[1], 10) - 1;
-        // Handle Format: MM/DD/YYYY or MM/DD/YY
-        if (parts[2] === '2026' || parts[2] === '26') return parseInt(parts[0], 10) - 1;
-    }
-    
-    // Fallback: Native JS Date parsing
-    const d = new Date(s);
-    if (!isNaN(d.getTime()) && d.getFullYear() === 2026) {
-        return d.getMonth();
-    }
-    
-    return -1;
-}
+        // --- NEW DATA PARSERS ---
+        function getMonthFromAnyDate(str) {
+            if (!str) return -1;
+            const s = str.toString().trim();
+            const dateStr = s.split(/[\sT]/)[0]; 
+            const parts = dateStr.split(/[-/]/);
+            
+            if (parts.length >= 3) {
+                if (parts[0] === '2026') return parseInt(parts[1], 10) - 1;
+                if (parts[2] === '2026' || parts[2] === '26') return parseInt(parts[0], 10) - 1;
+            }
+            const d = new Date(s);
+            if (!isNaN(d.getTime()) && d.getFullYear() === 2026) {
+                return d.getMonth();
+            }
+            return -1;
+        }
 
-        function cleanNum(val) { return parseFloat(val?.toString().replace(/[%\$,\s]/g, '')) || 0; }
+        function getTimestamp(str) {
+            if (!str) return 0;
+            const d = new Date(str.toString().split(/[\sT]/)[0]);
+            return isNaN(d.getTime()) ? 0 : d.getTime();
+        }
+
+        function cleanNum(val) { 
+            if (val === null || val === undefined || val === '') return 0;
+            let str = val.toString().trim();
+            if (str.startsWith('(') && str.endsWith(')')) {
+                str = '-' + str.slice(1, -1);
+            }
+            return parseFloat(str.replace(/[%\$,\s]/g, '')) || 0; 
+        }
 
         async function syncData() {
+            // Fetch live exchange rate
+            try {
+                const exResp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                if (exResp.ok) {
+                    const exData = await exResp.json();
+                    exchangeRateUSDToCAD = exData.rates.CAD;
+                }
+            } catch (e) {
+                console.warn("Using fallback CAD exchange rate due to network error.");
+            }
+
             try {
                 const [pResp, rResp] = await Promise.all([
                     fetch(`${PERFORMANCE_URL}&v=${Date.now()}`),
@@ -502,12 +530,16 @@ function getMonthFromAnyDate(str) {
             const validMonths = viewMode === 'quarter' ? [startM, startM + 1, startM + 2] : [selectedMonthIndex];
             
             let target = 0;
+            let targetRetailUSD = 0;
+
             validMonths.forEach(m => {
                 const mKey = monthKeys[m];
-                if (budget.joins && budget.joins[mKey]) {
-                    target += budget.joins[mKey];
-                }
+                if (budget.joins && budget.joins[mKey]) target += budget.joins[mKey];
+                if (budget.retail && budget.retail[mKey]) targetRetailUSD += budget.retail[mKey];
             });
+
+            // Convert goal to CAD
+            const targetRetailCAD = targetRetailUSD * exchangeRateUSDToCAD;
             
             document.getElementById('joins-label').textContent = viewMode === 'quarter' ? 'Quarterly Joins' : 'Monthly Joins';
             document.getElementById('mtd-label').textContent = viewMode === 'quarter' ? 'QTD Members' : 'MTD Members';
@@ -517,7 +549,7 @@ function getMonthFromAnyDate(str) {
 
             const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
-                    ? ['Coquitlam', 'Langley', 'North Van'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
+                    ? ['Coquitlam', 'Langley', 'North Van', 'White Rock'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 const rowMonth = getMonthFromAnyDate(r[4]);
                 return isMatch && validMonths.includes(rowMonth);
@@ -529,9 +561,8 @@ function getMonthFromAnyDate(str) {
             
             if (currentLocation === 'White Rock') {
                 wrContainer.style.display = 'block';
-                wrList.innerHTML = ''; // Clear previous
+                wrList.innerHTML = ''; 
                 
-                // Aggregate daily joins
                 const dailyData = {};
                 pMatches.forEach(r => {
                     const dateStr = r[4]; 
@@ -541,11 +572,8 @@ function getMonthFromAnyDate(str) {
                     }
                 });
                 
-                // Sort chronologically, then reverse so newest is at top
                 const sortedDates = Object.keys(dailyData).sort((a, b) => new Date(a) - new Date(b));
                 const reversedDates = [...sortedDates].reverse();
-                
-                // Find max for the progress bar background width
                 const maxJoins = Math.max(...Object.values(dailyData), 1); 
 
                 if (reversedDates.length === 0) {
@@ -555,14 +583,12 @@ function getMonthFromAnyDate(str) {
                         const joins = dailyData[d];
                         const pct = (joins / maxJoins) * 100;
                         
-                        // Format date to be short (e.g. MM/DD)
                         const parts = d.split(/[-/]/);
                         let shortDate = d;
                         if (parts.length >= 3) {
                             shortDate = d.includes('/') ? `${parts[0]}/${parts[1]}` : `${parts[1]}/${parts[2]}`;
                         }
                         
-                        // Parse full date for a nicer display (e.g., "Mon, Mar 12")
                         const dateObj = new Date(d);
                         let displayDate = shortDate;
                         if (!isNaN(dateObj)) {
@@ -591,7 +617,7 @@ function getMonthFromAnyDate(str) {
                     dwn += cleanNum(r[26]); 
                 });
                 
-                const lat = pMatches.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
+                const lat = pMatches.reduce((l, c) => getTimestamp(c[4]) >= getTimestamp(l[4]) ? c : l, pMatches[0]);
                 document.getElementById('latest-entry-label').textContent = `Latest Entry: ${lat[4]}`;
                 
                 document.getElementById('joins-value').textContent = Math.round(j).toLocaleString();
@@ -606,10 +632,10 @@ function getMonthFromAnyDate(str) {
 
                 if (currentLocation === 'All Clubs') {
                     let bcmTotal = 0, bcmCount = 0;
-                    ['Coquitlam', 'Langley', 'North Van'].forEach(club => {
+                    ['Coquitlam', 'Langley', 'North Van', 'White Rock'].forEach(club => {
                         const clubRows = pMatches.filter(r => r.some(c => c?.toString().toLowerCase().includes(club.toLowerCase())));
                         if (clubRows.length > 0) {
-                            const clubLat = clubRows.reduce((l, c) => getMonthFromAnyDate(c[4]) >= getMonthFromAnyDate(l[4]) ? c : l);
+                            const clubLat = clubRows.reduce((l, c) => getTimestamp(c[4]) >= getTimestamp(l[4]) ? c : l, clubRows[0]);
                             bcmTotal += cleanNum(clubLat[27]);
                             bcmCount++;
                             mtd += cleanNum(clubLat[11]);
@@ -684,10 +710,9 @@ function getMonthFromAnyDate(str) {
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-const rMatches = rawR.filter(r => {
+            // --- IMPROVED RETAIL LOGIC & DISPLAY ---
+            const rMatches = rawR.filter(r => {
                 const formalName = r[2]?.toString().replace(/\s+/g, ' ').trim().toUpperCase() || "";
-                
-                // Define the unbreakable core keywords for each location
                 const locKeywords = {
                     'Coquitlam': 'COQUITLAM',
                     'Langley': 'LANGLEY',
@@ -699,7 +724,6 @@ const rMatches = rawR.filter(r => {
                 if (currentLocation === 'All Clubs') {
                     isMatch = ['COQUITLAM', 'LANGLEY', 'NORTH VANCOUVER', 'WHITE ROCK'].some(loc => formalName.includes(loc));
                 } else {
-                    // Match only on the core keyword rather than the exact full formal string
                     const keyword = locKeywords[currentLocation];
                     isMatch = keyword ? formalName.includes(keyword) : false;
                 }
@@ -716,10 +740,7 @@ const rMatches = rawR.filter(r => {
                 const groups = {};
                 rMatches.forEach(r => {
                     const rev = cleanNum(r[12]); 
-                    
-                    // 2. NORMALIZE CATEGORY NAMES to prevent split lines
                     let rawCat = r[4]?.toString().trim() || "Other";
-                    // Enforce Title Case (e.g., "cooler drinks" -> "Cooler Drinks")
                     let cat = rawCat.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 
                     totalRev += rev;
@@ -728,7 +749,10 @@ const rMatches = rawR.filter(r => {
 
                 document.getElementById('retail-total').textContent = `$${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
                 
-                // Only show categories that actually have revenue (filter out $0 categories just in case)
+                // Calculate and display live USD conversion of actual revenue
+                const totalRevUSD = totalRev / exchangeRateUSDToCAD;
+                document.getElementById('retail-total-usd').textContent = totalRevUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
                 Object.entries(groups)
                     .filter(([k, v]) => v !== 0) 
                     .sort((a,b) => b[1]-a[1])
@@ -737,8 +761,16 @@ const rMatches = rawR.filter(r => {
                     });
             } else {
                 document.getElementById('retail-total').textContent = '$0.00';
+                document.getElementById('retail-total-usd').textContent = '0.00';
                 breakdown.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">No matching retail rows found.</div>';
             }
+
+            // Update Goals & Retail Progress Bar
+            document.getElementById('retail-goal-usd').textContent = targetRetailUSD.toLocaleString();
+            document.getElementById('retail-goal-cad').textContent = targetRetailCAD.toLocaleString(undefined, {maximumFractionDigits: 0});
+            
+            const retailProgressWidth = targetRetailCAD > 0 ? Math.min((totalRev / targetRetailCAD) * 100, 100) : 0;
+            document.getElementById('retail-progress').style.width = retailProgressWidth + '%';
         }
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', function() {
