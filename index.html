@@ -555,7 +555,7 @@
                 return isMatch && validMonths.includes(rowMonth);
             });
 
-            // --- Mobile Friendly List View for White Rock Pre-Sale ---
+            // --- Mobile Friendly List View for White Rock Pre-Sale (Rolling All Data) ---
             const wrContainer = document.getElementById('wr-presale-container');
             const wrList = document.getElementById('wr-daily-list');
             
@@ -563,12 +563,16 @@
                 wrContainer.style.display = 'block';
                 wrList.innerHTML = ''; 
                 
+                // Process ALL raw data for White Rock regardless of selected month
                 const dailyData = {};
-                pMatches.forEach(r => {
-                    const dateStr = r[4]; 
-                    const joins = cleanNum(r[14]);
-                    if (dateStr) {
-                        dailyData[dateStr] = (dailyData[dateStr] || 0) + joins;
+                rawP.forEach(r => {
+                    const isWRMatch = r.some(c => c?.toString().toLowerCase().includes('white rock'));
+                    if (isWRMatch) {
+                        const dateStr = r[4]; 
+                        const joins = cleanNum(r[14]);
+                        if (dateStr) {
+                            dailyData[dateStr] = (dailyData[dateStr] || 0) + joins;
+                        }
                     }
                 });
                 
@@ -577,7 +581,7 @@
                 const maxJoins = Math.max(...Object.values(dailyData), 1); 
 
                 if (reversedDates.length === 0) {
-                    wrList.innerHTML = '<div style="color:var(--text-muted); font-size:13px; padding:12px;">No pre-sale data found for this period.</div>';
+                    wrList.innerHTML = '<div style="color:var(--text-muted); font-size:13px; padding:12px;">No pre-sale data found.</div>';
                 } else {
                     reversedDates.forEach(d => {
                         const joins = dailyData[d];
