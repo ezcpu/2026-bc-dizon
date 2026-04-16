@@ -347,10 +347,10 @@
 
         const budgetData = {
             'All Clubs': {
-                joins: { jan: 1542, feb: 1141, mar: 1485, apr: 1540, may: 2076, jun: 1897, jul: 1675, aug: 1472, sep: 2181, oct: 1526, nov: 1664, dec: 1636 }, 
+                joins: { jan: 1542, feb: 1141, mar: 1125, apr: 1090, may: 948, jun: 726, jul: 845, aug: 821, sep: 1483, oct: 939, nov: 877, dec: 1018 }, 
                 bcm: 53.79, 
                 labor: { jan: "95.97%", feb: "95.97%", mar: "95.68%" }, 
-                retail: { jan: 7277, feb: 6025, mar: 8346, apr: 7446, may: 13093, jun: 12492, jul: 12744, aug: 10945, sep: 10270, oct: 10150, nov: 10952, dec: 10425 },
+                retail: { jan: 7277, feb: 6025, mar: 8346, apr: 7446, may: 8936, jun: 8466, jul: 8621, aug: 7044, sep: 6838, oct: 7022, nov: 7733, dec: 6636 },
                 formal: 'ALL CLUBS'
             },
             'Coquitlam': { 
@@ -396,10 +396,8 @@
         let viewMode = 'month'; 
         let deferredPrompt; 
         
-        // Default exchange rate fallback
         let exchangeRateUSDToCAD = 1.35; 
 
-        // Initialize Quarter Button
         document.querySelectorAll('.q-btn').forEach((btn, idx) => {
             btn.classList.toggle('active', idx === selectedQuarterIndex);
         });
@@ -459,7 +457,6 @@
             }
         }
 
-        // --- NEW DATA PARSERS ---
         function getMonthFromAnyDate(str) {
             if (!str) return -1;
             const s = str.toString().trim();
@@ -493,7 +490,6 @@
         }
 
         async function syncData() {
-            // Fetch live exchange rate
             try {
                 const exResp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
                 if (exResp.ok) {
@@ -538,7 +534,6 @@
                 if (budget.retail && budget.retail[mKey]) targetRetailUSD += budget.retail[mKey];
             });
 
-            // Convert goal to CAD
             const targetRetailCAD = targetRetailUSD * exchangeRateUSDToCAD;
             
             document.getElementById('joins-label').textContent = viewMode === 'quarter' ? 'Quarterly Joins' : 'Monthly Joins';
@@ -549,7 +544,8 @@
 
             const pMatches = rawP.filter(r => {
                 const isMatch = currentLocation === 'All Clubs' 
-                    ? ['Coquitlam', 'Langley', 'North Van', 'White Rock'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
+                    // Excluded White Rock from All Clubs match
+                    ? ['Coquitlam', 'Langley', 'North Van'].some(loc => r.some(c => c?.toString().toLowerCase().includes(loc.toLowerCase())))
                     : r.some(c => c?.toString().toLowerCase().includes(currentLocation.toLowerCase()));
                 const rowMonth = getMonthFromAnyDate(r[4]);
                 return isMatch && validMonths.includes(rowMonth);
@@ -563,7 +559,6 @@
                 wrContainer.style.display = 'block';
                 wrList.innerHTML = ''; 
                 
-                // Process ALL raw data for White Rock regardless of selected month
                 const dailyData = {};
                 rawP.forEach(r => {
                     const isWRMatch = r.some(c => c?.toString().toLowerCase().includes('white rock'));
@@ -636,7 +631,8 @@
 
                 if (currentLocation === 'All Clubs') {
                     let bcmTotal = 0, bcmCount = 0;
-                    ['Coquitlam', 'Langley', 'North Van', 'White Rock'].forEach(club => {
+                    // Excluded White Rock from BCM/Member aggregate loops
+                    ['Coquitlam', 'Langley', 'North Van'].forEach(club => {
                         const clubRows = pMatches.filter(r => r.some(c => c?.toString().toLowerCase().includes(club.toLowerCase())));
                         if (clubRows.length > 0) {
                             const clubLat = clubRows.reduce((l, c) => getTimestamp(c[4]) >= getTimestamp(l[4]) ? c : l, clubRows[0]);
@@ -714,7 +710,6 @@
                     typeof currentLabor === 'number' ? '$' + currentLabor.toLocaleString() : (currentLabor || "0.00%");
             }
 
-            // --- IMPROVED RETAIL LOGIC & DISPLAY ---
             const rMatches = rawR.filter(r => {
                 const formalName = r[2]?.toString().replace(/\s+/g, ' ').trim().toUpperCase() || "";
                 const locKeywords = {
@@ -726,7 +721,8 @@
 
                 let isMatch = false;
                 if (currentLocation === 'All Clubs') {
-                    isMatch = ['COQUITLAM', 'LANGLEY', 'NORTH VANCOUVER', 'WHITE ROCK'].some(loc => formalName.includes(loc));
+                    // Excluded White Rock from All Clubs retail match
+                    isMatch = ['COQUITLAM', 'LANGLEY', 'NORTH VANCOUVER'].some(loc => formalName.includes(loc));
                 } else {
                     const keyword = locKeywords[currentLocation];
                     isMatch = keyword ? formalName.includes(keyword) : false;
@@ -753,7 +749,6 @@
 
                 document.getElementById('retail-total').textContent = `$${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
                 
-                // Calculate and display live USD conversion of actual revenue
                 const totalRevUSD = totalRev / exchangeRateUSDToCAD;
                 document.getElementById('retail-total-usd').textContent = totalRevUSD.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
@@ -769,7 +764,6 @@
                 breakdown.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">No matching retail rows found.</div>';
             }
 
-            // Update Goals & Retail Progress Bar
             document.getElementById('retail-goal-usd').textContent = targetRetailUSD.toLocaleString();
             document.getElementById('retail-goal-cad').textContent = targetRetailCAD.toLocaleString(undefined, {maximumFractionDigits: 0});
             
